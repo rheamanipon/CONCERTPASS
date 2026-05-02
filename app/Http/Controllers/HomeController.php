@@ -74,6 +74,8 @@ class HomeController extends Controller
     public function show(Concert $concert)
     {
         $concert->load(['venue', 'ticketPrices.ticketType']);
-        return view('concert.show', compact('concert'));
+        $eventTicketTotal = $concert->totalTicketAllocation();
+
+        return view('concert.show', compact('concert', 'eventTicketTotal'));
     }
 }

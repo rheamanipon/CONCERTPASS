@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\ActivityLog;
 use App\Models\Booking;
 use App\Models\Concert;
-use App\Models\ConcertSeat;
 use App\Models\Payment;
+use App\Models\Ticket;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 

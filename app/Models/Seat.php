@@ -17,11 +17,6 @@ class Seat extends Model
         return $this->belongsTo(Venue::class);
     }
 
-    public function concertSeats()
-    {
-        return $this->hasMany(ConcertSeat::class);
-    }
-
     public function tickets()
     {
         return $this->hasMany(Ticket::class);

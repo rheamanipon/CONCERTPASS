@@ -31,7 +31,7 @@
                             </thead>
                             <tbody>
                                 @forelse($ticketStats as $stat)
-                                    @php($allocation = $stat->venue->capacity ?? $stat->allocated_seats)
+                                    @php($allocation = $stat->allocated_seats)
                                     @php($remaining = max($allocation - $stat->sold_seats, 0))
                                     <tr>
                                         <td>{{ $stat->title }}</td>

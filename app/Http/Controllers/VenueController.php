@@ -7,14 +7,10 @@ use App\Models\Concert;
 use App\Models\Seat;
 use App\Models\Ticket;
 use App\Models\Venue;
-use App\Services\ConcertSeatSyncService;
 use Illuminate\Http\Request;
 
 class VenueController extends Controller
 {
-    public function __construct(private ConcertSeatSyncService $concertSeatSyncService)
-    {
-    }
 
     public function index()
     {
@@ -128,18 +124,6 @@ class VenueController extends Controller
             $this->createVenueSeats($venue, $newCapacity);
         }
 
-        // Recalculate concert allocations to match current venue seat setup.
-        foreach ($concerts as $concert) {
-            try {
-                $this->recalculateConcertTicketQuantities($concert, $venue);
-                $this->concertSeatSyncService->syncConcert($concert, true);
-            } catch (\RuntimeException $exception) {
-                return back()
-                    ->withInput()
-                    ->withErrors(['capacity' => $exception->getMessage()]);
-            }
-        }
-
         $description = 'Updated venue: '.$venue->name;
         ActivityLog::record([
             'user_id' => auth()->id(),
@@ -209,67 +193,6 @@ class VenueController extends Controller
 
         \Log::info('Created ' . $totalSeats . ' seats for venue ' . $venue->id);
     }
-
-    private function recalculateConcertTicketQuantities(Concert $concert, Venue $venue): void
-    {
-        $ticketTypes = $concert->concertTicketTypes()->with('ticketType')->get();
-        if ($ticketTypes->isEmpty()) return;
-
-        $sectionSeatCounts = Seat::where('venue_id', $venue->id)
-            ->select('section', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
-            ->groupBy('section')
-            ->pluck('total', 'section');
-
-        $targets = [];
-        $assigned = 0;
-        $flexible = [];
-
-        foreach ($ticketTypes as $ctt) {
-            $slug = $ctt->ticketType->name ?? '';
-            $section = $this->getSeatSectionFromTicketType($slug);
-            if ($section === null) {
-                $flexible[] = $ctt;
-                continue;
-            }
-            $targets[$ctt->id] = (int) ($sectionSeatCounts[$section] ?? 0);
-            $assigned += $targets[$ctt->id];
-        }
-
-        $remaining = max(0, (int) $venue->capacity - $assigned);
-        $flexibleCount = count($flexible);
-        if ($flexibleCount > 0) {
-            $base = intdiv($remaining, $flexibleCount);
-            $remainder = $remaining % $flexibleCount;
-            foreach ($flexible as $index => $ctt) {
-                $targets[$ctt->id] = $base + ($index < $remainder ? 1 : 0);
-            }
-        }
-
-        foreach ($ticketTypes as $ctt) {
-            $soldCount = Ticket::where('concert_ticket_type_id', $ctt->id)->count();
-            $newQuantity = max($targets[$ctt->id] ?? 0, $soldCount);
-            $ctt->update(['quantity' => $newQuantity]);
-        }
-
-        $allocated = (int) $ticketTypes->fresh()->sum('quantity');
-        if ($allocated !== (int) $venue->capacity) {
-            throw new \RuntimeException("Ticket allocation mismatch for concert '{$concert->title}'. Expected {$venue->capacity}, got {$allocated}.");
-        }
-    }
-
-    private function getSeatSectionFromTicketType(string $ticketTypeSlug): ?string
-    {
-        return match ($ticketTypeSlug) {
-            'VIP Seated' => 'VIP Seated',
-            'LBB' => 'Lower Box B (LBB)',
-            'UBB' => 'Upper Box B (UBB)',
-            'LBA' => 'Lower Box A (LBA)',
-            'UBA' => 'Upper Box A (UBA)',
-            'Gen Ad', 'GEN AD' => 'General Admission (Gen Ad)',
-            default => null,
-        };
-    }
-
 }
 
 

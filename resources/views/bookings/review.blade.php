@@ -124,8 +124,8 @@
                             <span>{{ $concert->venue->name }}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span>Capacity</span>
-                            <span>{{ $concert->venue->capacity }} seats</span>
+                            <span>Tickets released</span>
+                            <span>{{ number_format($eventTicketTotal) }}</span>
                         </div>
                     </div>
                 </div>

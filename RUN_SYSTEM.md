@@ -67,37 +67,35 @@ php artisan storage:link
 
 ## 7) Run the System
 
-Use **2 terminals** in the project folder:
-
-**Terminal 1 (Laravel app server):**
+Use **1 terminal** in the project folder:
 
 ```bash
 php artisan serve
-```
-
-**Terminal 2 (Vite / CSS / JS):**
-
-```bash
-npm run dev
 ```
 
 Open in your browser:
 
 - `http://127.0.0.1:8000`
 
+**Note:** Tailwind CSS is compiled at build time, no need for a development watcher.
+
 ## 8) Daily Startup (Every Work Session)
 
 1. Start **Apache** + **MySQL** in XAMPP
 2. In the project folder, run:
    - `php artisan serve`
-   - `npm run dev`
 3. Open `http://127.0.0.1:8000`
 
 ## 9) Quick Troubleshooting
 
-- **Blank page / CSS or JS missing**
-  - Check if `npm run dev` is running
-  - If there is an error, run `npm install` again
+- **CSS not loading**
+  - Make sure Tailwind CSS is compiled in `resources/css/`
+  - Check browser cache (Ctrl+Shift+Delete)
+  - Verify `public/build/` exists with compiled assets
+- **Blank page**
+  - Check Laravel logs: `storage/logs/laravel.log`
+  - Ensure `.env` database credentials are correct
+  - Run `php artisan migrate` if needed
 
 - **Database connection error**
   - Check the DB values in `.env`

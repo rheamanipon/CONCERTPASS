@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Concert;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class ConcertApiController extends Controller
 {
@@ -50,6 +51,12 @@ class ConcertApiController extends Controller
 
     public function destroy(Concert $concert)
     {
+        if ($concert->hasSoldTickets()) {
+            return response()->json([
+                'message' => 'Cannot delete this concert because tickets have already been sold.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
         $concert->delete();
         return response()->json(['message' => 'Concert deleted']);
     }

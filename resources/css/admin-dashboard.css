@@ -108,6 +108,8 @@
     font-size: 1rem;
     line-height: 1.2;
     color: var(--ad-text);
+    font-weight: 900;
+    letter-spacing: 0.01em;
 }
 
 .admin-dashboard .admin-nav-list {
@@ -166,6 +168,8 @@
     margin: 0;
     font-size: 1.1rem;
     color: var(--ad-text);
+    font-weight: 900;
+    letter-spacing: 0.01em;
 }
 
 .admin-dashboard .admin-header p {
@@ -474,6 +478,8 @@
     margin: 0 0 0.7rem;
     font-size: 0.95rem;
     color: var(--ad-text);
+    font-weight: 800;
+    letter-spacing: 0.01em;
 }
 
 .admin-dashboard .ad-line-chart {

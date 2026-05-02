@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class ConcertTicketType extends Model
 {
+    protected $table = 'concert_ticket_options';
+
     protected $fillable = [
         'concert_id',
         'ticket_type_id',

@@ -25,9 +25,7 @@
                         ];
                         $revenue = (float) $concert->bookings->sum('total_price');
                         $typeCapacity = $concert->concertTicketTypes->sum('quantity');
-                        $remainingTickets = $typeCapacity > 0
-                            ? max(0, $typeCapacity - $ticketCounts['total'])
-                            : max(0, optional($concert->venue)->capacity - $ticketCounts['total']);
+                        $remainingTickets = max(0, $typeCapacity - $ticketCounts['total']);
                     @endphp
 
                     <div class="ad-concert-show-layout">

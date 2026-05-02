@@ -25,10 +25,14 @@
                                         <td style="display:flex; gap:.45rem;">
                                             <a href="{{ route('admin.concerts.show', $concert) }}" class="ad-btn">View</a>
                                             <a href="{{ route('admin.concerts.edit', $concert) }}" class="ad-btn">Edit</a>
+                                            @if($soldConcertIds->contains($concert->id))
+                                                <span class="ad-btn" style="opacity:0.55; cursor:not-allowed; border:1px solid rgba(148,163,184,0.35);" title="Tickets have been sold; this concert cannot be deleted.">Delete</span>
+                                            @else
                                             <form method="POST" action="{{ route('admin.concerts.destroy', $concert) }}" data-confirm="true" data-confirm-message="Are you sure to delete this concert?">
                                                 @csrf @method('DELETE')
                                                 <button class="ad-btn ad-btn-logout" type="submit" data-loading-text="Deleting...">Delete</button>
                                             </form>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty

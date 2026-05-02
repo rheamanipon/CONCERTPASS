@@ -36,20 +36,19 @@
                 </div>
             </div>
 
-            <form action="{{ route('bookings.store', $concert) }}" method="POST">
+                <form action="{{ route('bookings.store', $concert) }}" method="POST">
                 @csrf
+                @error('cart_items')
+                    <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 0.85rem 1rem; margin-bottom: 1rem; color: #991b1b; font-size: 0.95rem;">{{ $message }}</div>
+                @enderror
                 @php $ticketPrices = $concert->ticketPrices; @endphp
 
                 <div class="card-body">
                     <!-- Capacity Check Warning -->
-                    @php 
-                        $totalSold = $concert->bookings->sum(fn($b) => $b->tickets->count());
-                        $remaining = $concert->venue->capacity - $totalSold;
-                    @endphp
-                    @if($remaining <= 0)
+                    @if($remainingEventTickets <= 0)
                         <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 1rem; margin-bottom: 1.5rem; text-align: center;">
                             <p style="color: #dc2626; font-weight: 600; margin: 0;">🎫 SOLD OUT</p>
-                            <p style="color: #991b1b; margin-top: 0.5rem;">This event has reached venue capacity.</p>
+                            <p style="color: #991b1b; margin-top: 0.5rem;">All tickets allocated for this event have been sold.</p>
                         </div>
                         <div class="card-footer">
                             <button type="button" class="btn btn-secondary w-full" disabled>Tickets Unavailable</button>
@@ -58,7 +57,7 @@
                         <!-- Ticket Type Selection -->
                         <div style="margin-bottom: 1.5rem;">
                             <label for="ticket_type" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Ticket Type</label>
-                            <select id="ticket_type" name="ticket_type" required style="width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 0.25rem; font-size: 0.95rem;">
+                            <select id="ticket_type" name="ticket_type" required style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 0.25rem; font-size: 0.95rem; background: var(--bg-tertiary); color: var(--text-primary);">
                                 <option value="">Select ticket type</option>
                                 @foreach($ticketPrices as $ticketPrice)
                                     <option
@@ -66,6 +65,7 @@
                                         data-price="{{ $ticketPrice->price }}"
                                         data-ticket-slug="{{ $ticketPrice->ticketType->name }}"
                                         data-section="{{ $ticketPrice->section }}"
+                                        data-remaining="{{ $ticketAvailability[$ticketPrice->id] ?? 0 }}"
                                     >
                                         {{ $ticketPrice->section }} - ₱{{ number_format($ticketPrice->price, 2) }}
                                     </option>
@@ -77,7 +77,7 @@
                         <div id="quantity-section" style="margin-bottom: 1.5rem; display: none;">
                             <label for="ticket_quantity" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Quantity</label>
                             <div style="display: grid; grid-template-columns: 1fr 150px; gap: 0.75rem; align-items: flex-end; margin-bottom: 1.5rem;">
-                                <select id="ticket_quantity" name="ticket_quantity" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 0.25rem; font-size: 0.95rem;">
+                                <select id="ticket_quantity" name="ticket_quantity" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: 0.25rem; font-size: 0.95rem; background: var(--bg-tertiary); color: var(--text-primary);">
                                     <option value="1">1</option>
                                     <option value="2">2</option>
                                     <option value="3">3</option>
@@ -120,7 +120,7 @@
                         <input type="hidden" id="cart_items" name="cart_items" value="">
 
                         <div style="text-align: center; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
-                            <strong>Max 5 tickets per purchase</strong> | Tickets are assigned randomly within your selected type
+                            <strong>Max 5 tickets per purchase</strong> | Seats are limited to the first available seats in the selected section
                         </div>
                     @endif
                 </div>
@@ -164,8 +164,8 @@
                             <span>{{ $concert->venue->name }}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between;">
-                            <span>Capacity</span>
-                            <span>{{ $concert->venue->capacity }} seats</span>
+                            <span>Tickets released</span>
+                            <span>{{ number_format($eventTicketTotal) }}</span>
                         </div>
                     </div>
                 </div>
@@ -243,6 +243,60 @@
 
             function getCartQuantity() {
                 return cartItems.reduce((sum, item) => sum + (item.quantity ?? 1), 0);
+            }
+
+            function getRemainingForSelectedType() {
+                const selected = ticketTypeSelect.selectedOptions[0];
+                if (!selected || !selected.value) {
+                    return 0;
+                }
+                const raw = selected.dataset.remaining;
+                const n = parseInt(raw, 10);
+                return Number.isFinite(n) ? Math.max(0, n) : 0;
+            }
+
+            function getReservedQuantityForTicketType(typeId) {
+                const idStr = String(typeId);
+                return cartItems.reduce((sum, item) => {
+                    if (String(item.concert_ticket_type_id) !== idStr) {
+                        return sum;
+                    }
+                    return sum + (item.quantity ?? 1);
+                }, 0);
+            }
+
+            function refreshQuantityOptions() {
+                if (!quantitySelect) {
+                    return;
+                }
+                const type = ticketTypeSelect.value;
+                const remaining = getRemainingForSelectedType();
+                const reserved = getReservedQuantityForTicketType(type);
+                const cartQty = getCartQuantity();
+                const maxPerBooking = Math.max(0, maxTickets - cartQty + reserved);
+                const maxAddable = Math.max(0, Math.min(remaining - reserved, maxPerBooking, maxTickets));
+                const prev = quantitySelect.value;
+                quantitySelect.innerHTML = '';
+                const upper = Math.min(maxTickets, maxAddable);
+                for (let i = 1; i <= upper; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = String(i);
+                    opt.textContent = String(i);
+                    quantitySelect.appendChild(opt);
+                }
+                if (quantitySelect.options.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = '0';
+                    opt.textContent = remaining <= reserved ? 'Sold out' : 'None left';
+                    opt.disabled = true;
+                    quantitySelect.appendChild(opt);
+                }
+                const parsedPrev = parseInt(prev, 10);
+                if (Number.isFinite(parsedPrev) && parsedPrev >= 1 && parsedPrev <= upper) {
+                    quantitySelect.value = String(parsedPrev);
+                } else if (quantitySelect.options.length && !quantitySelect.options[0].disabled) {
+                    quantitySelect.selectedIndex = 0;
+                }
             }
 
             function getTicketPrice(type) {
@@ -471,12 +525,22 @@
                         return;
                     }
 
+                    const remaining = getRemainingForSelectedType();
+                    const reserved = getReservedQuantityForTicketType(type);
+                    if (reserved + quantity > remaining) {
+                        const left = Math.max(0, remaining - reserved);
+                        alert(left <= 0
+                            ? 'No tickets left for this type.'
+                            : `Only ${left} ticket(s) left for this type.`);
+                        return;
+                    }
+
                     if (currentQuantity + quantity > maxTickets) {
                         alert(`Total tickets cannot exceed ${maxTickets}`);
                         return;
                     }
 
-                    const existingIndex = cartItems.findIndex(item => item.concert_ticket_type_id === type && item.quantity);
+                    const existingIndex = cartItems.findIndex(item => String(item.concert_ticket_type_id) === String(type) && item.quantity);
                     if (existingIndex !== -1) {
                         cartItems[existingIndex].quantity += quantity;
                     } else {
@@ -491,6 +555,7 @@
                 updateCartInput();
                 updateCartDisplay();
                 updatePreview();
+                refreshQuantityOptions();
             }
 
             // Update tickets display
@@ -529,6 +594,7 @@
                             updateCartDisplay();
                             updatePreview();
                             updateCartInput();
+                            refreshQuantityOptions();
                         });
                     });
                 } else {
@@ -582,6 +648,7 @@
                 } else if (ticketSlug === 'VIP Standing' || ticketSlug === 'GEN AD') {
                     quantitySection.style.display = 'block';
                     seatSelection.style.display = 'none';
+                    refreshQuantityOptions();
                 } else {
                     quantitySection.style.display = 'none';
                     seatSelection.style.display = 'none';
@@ -593,6 +660,7 @@
             addQuantityTicketBtn.addEventListener('click', addTicket);
             addSeatTicketBtn.addEventListener('click', addTicket);
 
+            refreshQuantityOptions();
             updatePreview();
         });
     </script>

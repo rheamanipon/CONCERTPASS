@@ -77,10 +77,12 @@ class AdminDashboardController extends Controller
     {
         $ticketStats = Concert::query()
             ->with('venue')
-            ->withCount([
-                'concertSeats as allocated_seats',
-            ])
             ->addSelect([
+                'allocated_seats' => function ($query) {
+                    $query->selectRaw('COALESCE(SUM(quantity), 0)')
+                        ->from('concert_ticket_options')
+                        ->whereColumn('concert_ticket_options.concert_id', 'concerts.id');
+                },
                 'sold_seats' => Ticket::selectRaw('COUNT(tickets.id)')
                     ->join('bookings', 'tickets.booking_id', '=', 'bookings.id')
                     ->whereColumn('bookings.concert_id', 'concerts.id'),

@@ -27,7 +27,7 @@
             </style>
         @endif
 
-        @vite(['resources/css/app.css', 'resources/js/app.js'])
+        @include('layouts.partials.tailwind-cdn-assets')
     </head>
     <body class="{{ request()->routeIs('admin.*') ? 'admin-layout' : '' }}">
         @if(request()->routeIs('admin.*'))

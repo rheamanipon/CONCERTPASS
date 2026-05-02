@@ -7,6 +7,7 @@ use App\Models\ConcertTicketType;
 use App\Models\Seat;
 use App\Models\TicketType;
 use App\Models\Venue;
+use App\Services\VenueSeatPoolService;
 use Illuminate\Database\Seeder;
 
 class ConcertSeeder extends Seeder
@@ -120,15 +121,27 @@ class ConcertSeeder extends Seeder
             $ticketTypes = $concertData['ticket_types'];
             $prices = $concertData['prices'];
             $colors = $concertData['colors'];
-            $venueCapacity = $concert->venue->capacity;
+            $quantities = $concertData['quantities'] ?? [];
+            $venue = Venue::find($concertData['venue_id']);
+            if (!$venue || $venue->capacity <= 0) {
+                continue;
+            }
+
+            $venueCapacity = $venue->capacity;
             $typeCount = count($ticketTypes);
+            if ($typeCount === 0) {
+                continue;
+            }
+
             $baseQuantity = intdiv($venueCapacity, $typeCount);
             $remainder = $venueCapacity % $typeCount;
 
             foreach ($ticketTypes as $index => $ticketTypeName) {
                 $ticketType = TicketType::where('name', $ticketTypeName)->first();
                 if ($ticketType) {
-                    $quantity = $baseQuantity + ($index < $remainder ? 1 : 0);
+                    $quantity = isset($quantities[$index])
+                        ? $quantities[$index]
+                        : $baseQuantity + ($index < $remainder ? 1 : 0);
 
                     ConcertTicketType::create([
                         'concert_id' => $concert->id,
@@ -139,6 +152,9 @@ class ConcertSeeder extends Seeder
                     ]);
                 }
             }
+
+            $concert->load('concertTicketTypes.ticketType');
+            app(VenueSeatPoolService::class)->syncPhysicalSeatsForVenueTicketTypes($venue, $concert->concertTicketTypes);
         }
     }
 }

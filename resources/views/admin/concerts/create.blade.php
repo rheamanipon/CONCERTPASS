@@ -65,9 +65,9 @@
                         </div>
                         <div class="ad-field ad-field-full ad-ticket-pricing-panel" style="border: 1px solid rgba(255,255,255,0.08); padding: 1rem; margin-bottom: 1rem; border-radius: 0.5rem; background: rgba(255,255,255,0.02);">
                             <h3 class="ad-panel-title" style="margin-bottom: 0.75rem;">Ticket Pricing & Types</h3>
-                            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Configure ticket types and prices. Total ticket quantities must equal the venue capacity.</p>
+                            <p style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 1rem;">Configure ticket types, prices, and quantities. Quantities determine how many tickets are available for each type.</p>
 
-                            <div class="ad-grid-3" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; align-items: end; margin-bottom: 1rem;">
+                            <div class="ad-grid-5" style="display: grid; grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr)) minmax(0, 0.9fr); gap: 1rem; align-items: end; margin-bottom: 1rem;">
                                 <div>
                                     <label class="ad-label" for="ticket_type_select">Ticket Type</label>
                                     <select class="ad-select" id="ticket_type_select" aria-label="Ticket type">
@@ -82,13 +82,16 @@
                                     <input class="ad-input" id="ticket_price_input" type="number" min="0" step="0.01" placeholder="0.00" aria-label="Ticket price">
                                 </div>
                                 <div>
+                                    <label class="ad-label" for="ticket_quantity_input">Quantity</label>
+                                    <input class="ad-input" id="ticket_quantity_input" type="number" min="0" placeholder="0" aria-label="Ticket quantity">
+                                </div>
+                                <div>
                                     <label class="ad-label" for="ticket_color_input">Ticket Color</label>
                                     <input class="ad-input" id="ticket_color_input" type="color" value="#ff6600" aria-label="Ticket color" style="width: 100%; height: 3rem; padding: 0.2rem;">
                                 </div>
-                            </div>
-
-                            <div class="ad-field ad-field-full" style="margin-bottom: 1rem;">
-                                <button type="button" id="add_ticket_type_btn" class="ad-btn ad-btn-secondary" style="width: 100%;">Add Ticket Type</button>
+                                <div style="display: flex; align-items: center;">
+                                    <button type="button" id="add_ticket_type_btn" class="ad-btn ad-btn-secondary" style="width: 100%; height: 3rem;">Add Ticket Type</button>
+                                </div>
                             </div>
 
                             <div id="ticket_types_list" style="display: grid; gap: 0.75rem;"></div>
@@ -127,6 +130,7 @@
 
         const ticketTypeSelect = document.getElementById('ticket_type_select');
         const ticketPriceInput = document.getElementById('ticket_price_input');
+        const ticketQuantityInput = document.getElementById('ticket_quantity_input');
         const ticketColorInput = document.getElementById('ticket_color_input');
         const addTicketTypeBtn = document.getElementById('add_ticket_type_btn');
         const ticketTypesList = document.getElementById('ticket_types_list');
@@ -139,36 +143,12 @@
             color: ticket.color,
         }));
 
-        function getVenueCapacity() {
-            const venueId = venueSelect.value;
-            const venuesData = @json($venues->map(fn($v) => ['id' => $v->id, 'capacity' => $v->capacity])->values());
-            const venue = venuesData.find(v => v.id == venueId);
-            return venue ? venue.capacity : 0;
-        }
-
-        function calculateQuantities(typeCount) {
-            const capacity = getVenueCapacity();
-            if (!capacity || typeCount === 0) return [];
-
-            const baseQty = Math.floor(capacity / typeCount);
-            const remainder = capacity % typeCount;
-            const quantities = [];
-
-            for (let i = 0; i < typeCount; i++) {
-                quantities.push(baseQty + (i < remainder ? 1 : 0));
-            }
-            return quantities;
-        }
-
         function renderTicketTypes() {
             ticketTypesList.innerHTML = '';
-            const quantities = calculateQuantities(selectedTicketTypes.length);
 
             selectedTicketTypes.forEach((ticket, index) => {
                 const ticketType = ticketTypes.find((type) => type.id === Number(ticket.ticket_type_id));
                 const label = ticketType ? `${ticketType.name}${ticketType.description ? ' — ' + ticketType.description : ''}` : 'Selected ticket';
-                const quantity = quantities[index] || 0;
-                ticket.quantity = quantity;
 
                 const row = document.createElement('div');
                 row.className = 'ad-field';
@@ -176,8 +156,9 @@
                 row.innerHTML = `
                     <div>
                         <p style="margin: 0 0 0.25rem; font-weight: 700;">${label}</p>
-                        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; align-items: center;">
+                        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; align-items: center;">
                             <div style="font-size: 0.95rem; color: #cbd5e1;">Price: ₱${Number(ticket.price).toFixed(2)}</div>
+                            <div style="font-size: 0.95rem; color: #cbd5e1;">Quantity: ${ticket.quantity}</div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; color: #cbd5e1;"><span style="width: 1rem; height: 1rem; display: inline-block; border-radius: 9999px; background: ${ticket.color};"></span>Color</div>
                         </div>
                     </div>
@@ -196,6 +177,7 @@
         function addTicketType() {
             const selectedTypeId = ticketTypeSelect.value;
             const price = ticketPriceInput.value;
+            const quantity = ticketQuantityInput.value;
             const color = ticketColorInput.value;
 
             if (!selectedTypeId) {
@@ -204,6 +186,10 @@
             }
             if (price === '' || Number(price) < 0) {
                 alert('Please enter a valid ticket price');
+                return;
+            }
+            if (quantity === '' || Number(quantity) < 0) {
+                alert('Please enter a valid ticket quantity');
                 return;
             }
 
@@ -216,12 +202,13 @@
             selectedTicketTypes.push({
                 ticket_type_id: Number(selectedTypeId),
                 price: Number(price).toFixed(2),
-                quantity: 0,
+                quantity: Number(quantity),
                 color,
             });
 
             ticketTypeSelect.value = '';
             ticketPriceInput.value = '';
+            ticketQuantityInput.value = '';
             ticketColorInput.value = '#ff6600';
             renderTicketTypes();
         }
@@ -232,7 +219,6 @@
         }
 
         addTicketTypeBtn.addEventListener('click', addTicketType);
-        venueSelect.addEventListener('change', renderTicketTypes);
 
         document.addEventListener('DOMContentLoaded', () => {
             renderTicketTypes();

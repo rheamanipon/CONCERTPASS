@@ -55,11 +55,11 @@
                         <div class="ad-field ad-field-full ad-ticket-pricing-panel" style="border: 1px solid rgba(255,255,255,0.08); padding: 0.75rem; margin-bottom: 0.75rem; border-radius: 0.5rem; background: rgba(255,255,255,0.02);">
                             <h3 class="ad-panel-title" style="margin-bottom: 0.75rem;">Ticket Pricing & Types</h3>
                             <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 0.75rem;">
-                                Edit existing ticket prices and colors only. Ticket quantities and type assignments stay fixed to prevent seat duplication.
+                                Edit ticket prices, colors, and quantities. Quantities cannot be reduced below already sold tickets.
                             </p>
                             @if($hasSoldTickets)
                                 <div style="margin-bottom: 0.75rem; padding: 0.6rem 0.8rem; border: 1px solid rgba(248,113,113,0.4); border-radius: 0.5rem; background: rgba(248,113,113,0.08); color: #fecaca;">
-                                    Ticket pricing/types are locked because tickets have already been sold for this concert.
+                                    Ticket pricing and colors are locked because tickets have already been sold for this concert.
                                 </div>
                             @endif
 
@@ -123,12 +123,14 @@
         })->values()->all();
 
         $existingTicketTypesJson = old('ticket_types', $concert->concertTicketTypes->map(function ($type) {
+            $soldCount = \App\Models\Ticket::where('concert_ticket_type_id', $type->id)->count();
             return [    
                 'id' => $type->id,
                 'ticket_type_id' => $type->ticket_type_id,
                 'price' => $type->price,
                 'quantity' => $type->quantity,
                 'color' => $type->color,
+                'sold' => $soldCount,
             ];
         })->values()->all());
     @endphp
@@ -145,6 +147,7 @@
             price: Number(ticket.price),
             quantity: Number(ticket.quantity ?? 0),
             color: ticket.color || '#ff6600',
+            sold: Number(ticket.sold ?? 0),
         }));
 
         function renderTicketTypes() {
@@ -160,11 +163,15 @@
                 row.innerHTML = `
                     <div>
                         <p style="margin: 0 0 0.2rem; font-weight: 700; font-size: 0.95rem;">${label}</p>
-                        <p style="margin: 0 0 0.5rem; font-size: 0.82rem; color: #94a3b8;">Allocated seats: ${ticket.quantity}</p>
-                        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.55rem; align-items: end;">
+                        <p style="margin: 0 0 0.5rem; font-size: 0.82rem; color: #94a3b8;">Sold: ${ticket.sold || 0} | Available: ${ticket.quantity - (ticket.sold || 0)}</p>
+                        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.55rem; align-items: end;">
                             <div>
                                 <label class="ad-label" style="margin-bottom: 0.25rem; font-size: 0.75rem;">Price (PHP)</label>
                                 <input class="ad-input" type="number" min="0" step="0.01" value="${Number(ticket.price).toFixed(2)}" ${hasSoldTickets ? 'disabled' : ''} data-action="price" data-index="${index}" style="padding: 0.5rem 0.7rem; min-height: 2.2rem; font-size: 0.9rem;">
+                            </div>
+                            <div>
+                                <label class="ad-label" style="margin-bottom: 0.25rem; font-size: 0.75rem;">Quantity</label>
+                                <input class="ad-input" type="number" min="${ticket.sold || 0}" value="${ticket.quantity}" ${hasSoldTickets ? 'disabled' : ''} data-action="quantity" data-index="${index}" style="padding: 0.5rem 0.7rem; min-height: 2.2rem; font-size: 0.9rem;">
                             </div>
                             <div>
                                 <label class="ad-label" style="margin-bottom: 0.25rem; font-size: 0.75rem;">Color</label>
@@ -190,6 +197,21 @@
                         const hiddenPrice = rowQuery(index, 'price');
                         if (hiddenPrice) {
                             hiddenPrice.value = nextPrice.toFixed(2);
+                        }
+                    }
+                });
+            });
+
+            ticketTypesList.querySelectorAll('[data-action="quantity"]').forEach((input) => {
+                input.addEventListener('input', (event) => {
+                    const index = Number(event.currentTarget.dataset.index);
+                    const nextQuantity = Number(event.currentTarget.value);
+                    const minQuantity = selectedTicketTypes[index].sold || 0;
+                    if (Number.isFinite(nextQuantity) && nextQuantity >= minQuantity) {
+                        selectedTicketTypes[index].quantity = nextQuantity;
+                        const hiddenQuantity = rowQuery(index, 'quantity');
+                        if (hiddenQuantity) {
+                            hiddenQuantity.value = nextQuantity;
                         }
                     }
                 });

@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('booking_id')->constrained()->cascadeOnDelete();
             $table->foreignId('concert_ticket_type_id')
                 ->nullable()
-                ->constrained('concert_ticket_types')
+                ->constrained('concert_ticket_options')
                 ->nullOnDelete()
                 ->after('booking_id');
             $table->string('ticket_type');

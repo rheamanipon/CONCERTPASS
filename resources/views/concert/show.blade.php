@@ -28,7 +28,7 @@
                         <div style="border-bottom: 2px solid #222; padding-bottom: 1.5rem;">
                             <p style="color: #555; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 0.75rem;">Venue</p>
                             <p style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem; color: #fff;">{{ $concert->venue->name }}</p>
-                            <p style="color: #777; font-size: 0.95rem;">Capacity: {{ $concert->venue->capacity }}</p>
+                            <p style="color: #777; font-size: 0.95rem;">Tickets released: {{ number_format($eventTicketTotal) }}</p>
                         </div>
                         <div style="border-bottom: 2px solid #222; padding-bottom: 1.5rem;">
                             <p style="color: #555; font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.1em; margin-bottom: 0.75rem;">Date & Time</p>

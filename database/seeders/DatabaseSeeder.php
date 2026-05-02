@@ -20,7 +20,6 @@ class DatabaseSeeder extends Seeder
             VenueSeeder::class,
             SeatSeeder::class,
             ConcertSeeder::class,
-            ConcertSeatSeeder::class,
         ]);
     }
 }

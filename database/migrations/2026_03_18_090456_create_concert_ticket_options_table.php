@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('concert_ticket_types', function (Blueprint $table) {
+        Schema::create('concert_ticket_options', function (Blueprint $table) {
             $table->id();
             $table->foreignId('concert_id')->constrained()->cascadeOnDelete();
             $table->foreignId('ticket_type_id')->constrained()->cascadeOnDelete();
@@ -28,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('concert_ticket_types');
+        Schema::dropIfExists('concert_ticket_options');
     }
 };

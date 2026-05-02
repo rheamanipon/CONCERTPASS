@@ -21,6 +21,7 @@ return new class extends Migration
             $table->time('time');
             $table->string('poster_url')->nullable();
             $table->string('seat_plan_image')->nullable();
+            $table->timestamps();
         });
     }
 

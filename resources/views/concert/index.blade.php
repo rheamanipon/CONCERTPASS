@@ -72,4 +72,3 @@
         @endif
     </div>
 </x-app-layout></content>
-<parameter name="filePath">c:\xampp\htdocs\Updated_PDC03_FinalProject\resources\views\concert\index.blade.php
