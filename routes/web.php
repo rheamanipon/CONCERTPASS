@@ -42,7 +42,7 @@ Route::get('/concerts/{concert}', [HomeController::class, 'show'])->name('concer
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified', 'user'])->name('dashboard');
+})->middleware(['auth', 'user'])->name('dashboard');
 
 Route::middleware(['auth', 'user'])->group(function () {
     Route::resource('bookings', BookingController::class, ['only' => ['index', 'show']]);
