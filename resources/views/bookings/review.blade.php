@@ -95,7 +95,11 @@
 
             <div class="card-footer" style="display: flex; gap: 1rem;">
                 <a href="{{ route('bookings.create', $concert) }}" class="btn btn-secondary" style="flex: 1;">Back</a>
-                <a href="{{ route('bookings.checkout', $concert) }}" class="btn btn-primary" style="flex: 1;">Proceed to Checkout</a>
+                <form action="{{ route('bookings.checkout', $concert) }}" method="POST" style="flex: 1; margin: 0;">
+                    @csrf
+                    <input type="hidden" name="booking_items" value="{{ $bookingPayloadJson }}">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Proceed to Checkout</button>
+                </form>
             </div>
         </div>
 

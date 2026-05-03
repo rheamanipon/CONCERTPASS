@@ -18,7 +18,7 @@ class ConcertApiController extends Controller
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:20000',
             'artist' => 'required|string|max:255',
             'venue_id' => 'required|exists:venues,id',
             'date' => 'required|date',
@@ -38,7 +38,7 @@ class ConcertApiController extends Controller
     {
         $data = $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:20000',
             'artist' => 'required|string|max:255',
             'venue_id' => 'required|exists:venues,id',
             'date' => 'required|date',

@@ -14,11 +14,6 @@ use Illuminate\Support\Facades\DB;
  */
 class VenueSeatPoolService
 {
-    /**
-     * Ticket types that use the seat picker (must stay aligned with BookingController).
-     */
-    private const PHYSICAL_SEAT_SLUGS = ['VIP Seated', 'LBB', 'UBB', 'LBA', 'UBA'];
-
     public function __construct(
         private readonly ConcertSeatAvailabilityService $seatAvailability,
     ) {
@@ -37,7 +32,7 @@ class VenueSeatPoolService
             }
 
             $slug = $ctt->ticketType->name ?? '';
-            if (! in_array($slug, self::PHYSICAL_SEAT_SLUGS, true)) {
+            if (! $this->seatAvailability->requiresSeatSelection($slug)) {
                 continue;
             }
 

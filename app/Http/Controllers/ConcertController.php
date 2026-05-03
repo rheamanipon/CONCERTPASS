@@ -71,7 +71,7 @@ class ConcertController extends Controller
     {
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:20000',
             'artist' => 'required|string|max:255',
             'venue_id' => 'required|exists:venues,id',
             'date' => 'required|date|after:today',
@@ -80,7 +80,7 @@ class ConcertController extends Controller
             'ticket_types' => 'required|array|min:1',
             'ticket_types.*.ticket_type_id' => 'required|exists:ticket_types,id',
             'ticket_types.*.price' => 'required|numeric|min:0',
-            'ticket_types.*.quantity' => 'required|integer|min:0',
+            'ticket_types.*.quantity' => 'required|integer|min:1',
             'ticket_types.*.color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
         ]);
 
@@ -191,7 +191,7 @@ class ConcertController extends Controller
 
         $request->validate([
             'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'description' => 'nullable|string|max:20000',
             'artist' => 'required|string|max:255',
             'venue_id' => 'required|exists:venues,id',
             'date' => 'required|date',
@@ -203,7 +203,7 @@ class ConcertController extends Controller
             'ticket_types.*.ticket_type_id' => 'required|exists:ticket_types,id',
             'ticket_types.*.custom_name' => 'nullable|string|max:255',
             'ticket_types.*.price' => 'required|numeric|min:0',
-            'ticket_types.*.quantity' => 'required|integer|min:0',
+            'ticket_types.*.quantity' => 'required|integer|min:1',
             'ticket_types.*.color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
         ]);
 

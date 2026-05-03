@@ -23,6 +23,21 @@ class ConcertSeatAvailabilityService
     private const SEAT_PICKER_SLUGS = ['VIP Seated', 'LBB', 'UBB', 'LBA', 'UBA'];
 
     /**
+     * @return list<string>
+     */
+    public function seatPickerSlugs(): array
+    {
+        return self::SEAT_PICKER_SLUGS;
+    }
+
+    public function requiresSeatSelection(?string $ticketTypeSlug): bool
+    {
+        return $ticketTypeSlug !== null
+            && $ticketTypeSlug !== ''
+            && in_array($ticketTypeSlug, self::SEAT_PICKER_SLUGS, true);
+    }
+
+    /**
      * Map ticket type slug (ticket_types.name) to venue seats.section value.
      */
     public function sectionForTicketTypeSlug(?string $ticketTypeSlug): ?string
@@ -69,6 +84,10 @@ class ConcertSeatAvailabilityService
         return Seat::query()
             ->where('venue_id', $venueId)
             ->where('section', $section)
+            ->where(function (Builder $q): void {
+                $q->where('status', 'available')
+                    ->orWhereNull('status');
+            })
             ->orderByRaw('CAST(seat_number AS UNSIGNED) ASC');
     }
 

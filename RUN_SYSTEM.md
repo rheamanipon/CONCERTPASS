@@ -1,25 +1,24 @@
-# PDC Concert Ticketing - Run System Guide
 
-This is the updated step-by-step guide to run the system properly on Windows using XAMPP.
+# PDC Concert Ticketing - System Run Guide
 
-## 1) Requirements
+Follow these steps to set up and run the system on Windows using XAMPP.
 
-Make sure these are installed:
+## 1. Requirements
 
-- XAMPP (Apache + MySQL)
-- PHP (compatible with this project's Laravel version)
+Install the following:
+- XAMPP (Apache & MySQL)
+- PHP (compatible with Laravel version)
 - Composer
-- Node.js + npm
+- Node.js & npm
 
-## 2) Project Path
+## 2. Project Location
 
-The project should be located at:
-
+Place the project in:
 `C:\xampp\htdocs\PDC-3-FINALPROJ-VER3`
 
-## 3) First-Time Setup (One-Time Only)
+## 3. First-Time Setup (One-Time Only)
 
-Open a terminal in the project folder, then run:
+Open a terminal in the project folder and run:
 
 ```bash
 composer install
@@ -28,11 +27,13 @@ copy .env.example .env
 php artisan key:generate
 ```
 
-## 4) Configure Database
+Edit `.env` to set your database credentials (see next step).
 
-1. Start **Apache** and **MySQL** in the XAMPP Control Panel.
-2. Create a database in phpMyAdmin (example: `concert_ticket_reservation_system`).
-3. Update `.env`:
+## 4. Database Setup
+
+1. Start **Apache** and **MySQL** in XAMPP Control Panel.
+2. Create a database in phpMyAdmin (e.g. `concert_ticket_reservation_system`).
+3. In `.env`, set:
 
 ```env
 DB_CONNECTION=mysql
@@ -43,75 +44,65 @@ DB_USERNAME=root
 DB_PASSWORD=
 ```
 
-## 5) Import Data / Run Migrations
+## 5. Database Migration & Seeding
 
-Choose one:
-
-- **Option A (recommended for fresh setup):**
+**Option A (recommended):**
 
 ```bash
 php artisan migrate --seed
 ```
 
-- **Option B (if you already have an SQL dump):**
-  - Import the `.sql` file in phpMyAdmin
-  - Do not run `migrate --seed` if the imported database is already complete
+**Option B (if you have a SQL dump):**
+- Import the `.sql` file in phpMyAdmin
+- Skip `migrate --seed` if the database is already complete
 
-## 6) Storage Link (for images)
+## 6. Build Frontend Assets
 
-Run this once so uploaded images work properly:
+Compile CSS/JS assets (run after npm install):
+
+```bash
+npm run build
+```
+
+## 7. Storage Link (for images)
+
+Run this once:
 
 ```bash
 php artisan storage:link
 ```
 
-## 7) Run the System
+## 8. Running the System (Daily Use)
 
-Use **1 terminal** in the project folder:
+Each time you want to use the system:
 
-```bash
-php artisan serve
-```
-
-Open in your browser:
-
-- `http://127.0.0.1:8000`
-
-**Note:** Tailwind CSS is compiled at build time, no need for a development watcher.
-
-## 8) Daily Startup (Every Work Session)
-
-1. Start **Apache** + **MySQL** in XAMPP
+1. Start **Apache** and **MySQL** in XAMPP
 2. In the project folder, run:
-   - `php artisan serve`
-3. Open `http://127.0.0.1:8000`
+   ```bash
+   php artisan serve
+   ```
+3. Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in your browser
 
-## 9) Quick Troubleshooting
+**Note:** If you change CSS/JS, re-run `npm run build`.
 
-- **CSS not loading**
-  - Make sure Tailwind CSS is compiled in `resources/css/`
-  - Check browser cache (Ctrl+Shift+Delete)
-  - Verify `public/build/` exists with compiled assets
-- **Blank page**
-  - Check Laravel logs: `storage/logs/laravel.log`
-  - Ensure `.env` database credentials are correct
+## 9. Troubleshooting
+
+- **CSS not loading:**
+  - Run `npm run build` and refresh the browser
+  - Clear browser cache
+  - Check `public/build/` for compiled assets
+- **Blank page:**
+  - Check `storage/logs/laravel.log`
+  - Verify `.env` database credentials
   - Run `php artisan migrate` if needed
-
-- **Database connection error**
-  - Check the DB values in `.env`
-  - Confirm MySQL is running in XAMPP
+- **Database connection error:**
+  - Check `.env` DB values
+  - Ensure MySQL is running
   - Run `php artisan config:clear`
-
-- **Application key missing**
+- **Application key missing:**
   - Run `php artisan key:generate`
-
-- **Images not showing**
+- **Images not showing:**
   - Run `php artisan storage:link`
-
-- **Class/config not updating**
-  - Run:
-
-```bash
-php artisan optimize:clear
-```
+- **Config/class changes not updating:**
+  - Run `php artisan optimize:clear`
 

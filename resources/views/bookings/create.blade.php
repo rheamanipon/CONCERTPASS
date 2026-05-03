@@ -38,7 +38,7 @@
 
                 <form action="{{ route('bookings.store', $concert) }}" method="POST">
                 @csrf
-                @error('cart_items')
+                @error('booking_items')
                     <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 0.5rem; padding: 0.85rem 1rem; margin-bottom: 1rem; color: #991b1b; font-size: 0.95rem;">{{ $message }}</div>
                 @enderror
                 @php $ticketPrices = $concert->ticketPrices; @endphp
@@ -117,7 +117,7 @@
                         </div>
 
                         <!-- Hidden inputs for cart items -->
-                        <input type="hidden" id="cart_items" name="cart_items" value="">
+                        <input type="hidden" id="booking_items" name="booking_items" value="">
 
                         <div style="text-align: center; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem;">
                             <strong>Max 5 tickets per purchase</strong> | Seats are limited to the first available seats in the selected section
@@ -218,7 +218,7 @@
             const addSeatTicketBtn = document.getElementById('add-seat-ticket-btn');
             const addedTicketsDiv = document.getElementById('added-tickets');
             const ticketsList = document.getElementById('tickets-list');
-            const cartItemsInput = document.getElementById('cart_items');
+            const cartItemsInput = document.getElementById('booking_items');
             const totalPreview = document.getElementById('total-preview');
             const totalPriceEl = document.getElementById('total-price');
             const totalDetailsEl = document.getElementById('total-details');
@@ -329,11 +329,12 @@
                     const ticketTypeId = ticketTypeSelect.value;
                     const response = await fetch(`/concerts/${concertId}/seats?concert_ticket_type_id=${encodeURIComponent(ticketTypeId)}`);
                     const payload = await response.json();
-                    if (!response.ok) {
+                    if (!response.ok || !payload.success) {
                         seatsData = [];
-                        alert(payload.error || 'Unable to load seats right now. Please try again.');
+                        alert(payload.message || 'Unable to load seats right now. Please try again.');
                     } else {
-                        seatsData = Array.isArray(payload) ? payload : [];
+                        const list = payload.data && Array.isArray(payload.data.seats) ? payload.data.seats : [];
+                        seatsData = list;
                     }
                     populateSeatDropdown();
                 } catch (error) {

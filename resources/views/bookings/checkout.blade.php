@@ -34,8 +34,9 @@
                 <p style="color: var(--text-secondary); font-size: 0.95rem;">Enter your card details to complete this purchase.</p>
             </div>
 
-            <form action="{{ route('bookings.confirm-payment', $concert) }}" method="POST">
+            <form id="checkout-main-form" action="{{ route('bookings.confirm-payment', $concert) }}" method="POST">
                 @csrf
+                <input type="hidden" name="booking_items" value="{{ old('booking_items', $bookingPayloadJson ?? '') }}">
 
                 @if ($errors->any())
                     <div style="margin-bottom: 1.5rem; padding: 1rem; border: 1px solid rgba(248, 113, 113, 0.4); background: rgba(254, 226, 226, 0.2); border-radius: 0.5rem; color: #991b1b;">
@@ -106,12 +107,16 @@
                         @enderror
                     </div>
                 </div>
-
-                <div class="card-footer" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                    <a href="{{ route('bookings.review', $concert) }}" class="btn btn-secondary" style="flex: 1; min-width: 150px; text-align: center;">Back</a>
-                    <button type="submit" class="btn btn-primary" style="flex: 1; min-width: 150px; font-weight: 700; letter-spacing: 0.05em;">CONFIRM PAYMENT</button>
-                </div>
             </form>
+
+            <div class="card-footer" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <form action="{{ route('bookings.review', $concert) }}" method="POST" style="flex: 1; min-width: 150px; margin: 0;">
+                    @csrf
+                    <input type="hidden" name="booking_items" value="{{ old('booking_items', $bookingPayloadJson ?? '') }}">
+                    <button type="submit" class="btn btn-secondary" style="width: 100%; text-align: center;">Back</button>
+                </form>
+                <button type="submit" form="checkout-main-form" class="btn btn-primary" style="flex: 1; min-width: 150px; font-weight: 700; letter-spacing: 0.05em;">CONFIRM PAYMENT</button>
+            </div>
         </div>
 
         <!-- SIDEBAR: ORDER SUMMARY -->
