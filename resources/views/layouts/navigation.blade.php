@@ -18,10 +18,10 @@
 
         <div class="nav-user">
             @auth
-                <div class="user-badge">
+                <a href="{{ route('profile.edit') }}" class="user-badge user-badge-link">
                     <span>{{ Auth::user()->name }}</span>
                     <span class="role">{{ auth()->user()->role }}</span>
-                </div>
+                </a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                     @csrf
                     <button type="submit" class="btn btn-primary btn-small">Log Out</button>
