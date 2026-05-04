@@ -87,8 +87,8 @@
 
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                             <div style="padding: 1rem; background-color: rgba(255, 102, 0, 0.05); border-left: 2px solid var(--accent-primary);">
-                                <p style="color: var(--text-tertiary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.5rem;">Method</p>
-                                <p style="font-weight: 700;">{{ ucfirst(str_replace('_', ' ', $booking->payment->payment_method)) }}</p>
+                                <p style="color: var(--text-tertiary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.5rem;">Card Number</p>
+                                <p style="font-weight: 700;">{{ $booking->payment->masked_payment_method }}</p>
                             </div>
                             <div style="padding: 1rem; background-color: rgba(255, 102, 0, 0.05); border-left: 2px solid var(--accent-primary);">
                                 <p style="color: var(--text-tertiary); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; margin-bottom: 0.5rem;">Status</p>

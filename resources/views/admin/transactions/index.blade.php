@@ -70,7 +70,7 @@
                                     <th>User</th>
                                     <th>Event</th>
                                     <th>Amount Paid</th>
-                                    <th>Payment Method</th>
+                                    <th>Card Number</th>
                                     <th>Status</th>
                                     <th>Transaction Date</th>
                                     <th>Actions</th>

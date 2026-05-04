@@ -20,10 +20,12 @@
                 @php($displayDate = $transaction->paid_at ?? $transaction->created_at)
                 @php($rawCardValue = trim((string) $transaction->payment_method))
                 @php($cardDigits = preg_replace('/\D+/', '', $rawCardValue) ?? '')
+                @php($formattedCardValue = $rawCardValue)
                 @php($maskedCardValue = $rawCardValue)
                 @if($cardDigits !== '')
-                    @php($lastFour = substr($cardDigits, -4))
-                    @php($maskedCardValue = '**** **** **** '.$lastFour)
+                    @php($formattedCardValue = trim(chunk_split($cardDigits, 4, ' ')))
+                    @php($maskedDigits = str_repeat('*', max(0, strlen($cardDigits) - 4)) . substr($cardDigits, -4))
+                    @php($maskedCardValue = trim(chunk_split($maskedDigits, 4, ' ')))
                 @endif
 
                 <section class="ad-card ad-crud-card">
@@ -47,7 +49,7 @@
                             <p class="ad-label">Card Details</p>
                             <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem;">
                                 <p class="value" id="cardValueText"
-                                    data-full="{{ $rawCardValue }}"
+                                    data-full="{{ $formattedCardValue }}"
                                     data-masked="{{ $maskedCardValue }}"
                                     style="margin: 0;">
                                     {{ $maskedCardValue ?: '-' }}

@@ -43,40 +43,16 @@
 
                 <section class="ad-grid ad-two-col" style="margin-top: 1rem;">
                     <article class="ad-card">
-                        <h3 class="ad-panel-title">Sales Trend (Line Chart)</h3>
-                        <div class="ad-line-chart">
-                            <svg viewBox="0 0 1000 260" preserveAspectRatio="none" role="img" aria-label="Monthly sales line chart">
-                                <polyline points="0,198 120,180 240,154 360,166 480,132 600,118 720,96 840,76 960,58"
-                                    fill="none" stroke="#ff6600" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />
-                                <polygon points="0,198 120,180 240,154 360,166 480,132 600,118 720,96 840,76 960,58 960,260 0,260"
-                                    fill="rgba(255,102,0,0.15)" />
-                            </svg>
+                        <h3 class="ad-panel-title">Revenue per Concert (Bar Chart)</h3>
+                        <div class="ad-bar-wrap" style="height: 260px;">
+                            <canvas id="revenueConcertChart" width="1000" height="260" style="width:100%;height:100%;background:transparent;"></canvas>
                         </div>
                     </article>
 
                     <article class="ad-card">
                         <h3 class="ad-panel-title">Revenue by Channel (Bar Chart)</h3>
-                        <div class="ad-bar-wrap">
-                            <div class="ad-bar-item">
-                                <span>Online</span>
-                                <span class="ad-bar-track"><span class="ad-bar-fill" style="width: 92%;"></span></span>
-                                <strong>$320k</strong>
-                            </div>
-                            <div class="ad-bar-item">
-                                <span>Mobile App</span>
-                                <span class="ad-bar-track"><span class="ad-bar-fill" style="width: 78%;"></span></span>
-                                <strong>$270k</strong>
-                            </div>
-                            <div class="ad-bar-item">
-                                <span>Walk-in</span>
-                                <span class="ad-bar-track"><span class="ad-bar-fill" style="width: 47%;"></span></span>
-                                <strong>$152k</strong>
-                            </div>
-                            <div class="ad-bar-item">
-                                <span>Partners</span>
-                                <span class="ad-bar-track"><span class="ad-bar-fill" style="width: 33%;"></span></span>
-                                <strong>$98k</strong>
-                            </div>
+                        <div class="ad-bar-wrap" style="height: 260px;">
+                            <canvas id="revenueChannelChart" width="400" height="260" style="width:100%;height:100%;background:transparent;"></canvas>
                         </div>
                     </article>
                 </section>
@@ -122,4 +98,63 @@
     </section>
 
     @include('admin.partials.theme-script')
-</x-app-layout>
+    <script src="/chartjs-loader.js"></script>
+    <script>
+    function fetchAndRenderCharts() {
+        fetch('/api/admin/analytics')
+            .then(res => res.json())
+            .then(data => {
+                // Revenue per Concert (Bar Chart)
+                const concertLabels = data.concerts.map(c => c.title);
+                const concertData = data.concerts.map(c => c.revenue);
+                const ctx1 = document.getElementById('revenueConcertChart').getContext('2d');
+                if (window.revenueConcertChart) window.revenueConcertChart.destroy();
+                window.revenueConcertChart = new Chart(ctx1, {
+                    type: 'bar',
+                    data: {
+                        labels: concertLabels,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: concertData,
+                            backgroundColor: '#ff6600',
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+
+                // Revenue by Channel (Bar Chart)
+                const channelLabels = data.channels.map(c => c.payment_method || 'Unknown');
+                const channelData = data.channels.map(c => c.revenue);
+                const ctx2 = document.getElementById('revenueChannelChart').getContext('2d');
+                if (window.revenueChannelChart) window.revenueChannelChart.destroy();
+                window.revenueChannelChart = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: channelLabels,
+                        datasets: [{
+                            label: 'Revenue',
+                            data: channelData,
+                            backgroundColor: '#444',
+                            borderRadius: 8,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            });
+    }
+    document.addEventListener('chartjs:loaded', fetchAndRenderCharts);
+    // Optional: auto-refresh every 30s for real-time effect
+    setInterval(() => { if (window.Chart) fetchAndRenderCharts(); }, 30000);
+    </script>
+ </x-app-layout>

@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ConcertBookingApiController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\VenueController;
+use App\Models\Concert;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -25,7 +26,7 @@ Route::middleware(['auth', 'user'])->group(function () {
     Route::get('/concerts/{concert}/book', [BookingController::class, 'create'])->name('bookings.create')->where('concert', '[0-9]+');
     Route::post('/concerts/{concert}/book', [BookingController::class, 'store'])->name('bookings.store')->where('concert', '[0-9]+');
     Route::match(['get', 'post'], '/concerts/{concert}/review', [BookingController::class, 'review'])->name('bookings.review')->where('concert', '[0-9]+');
-    Route::post('/concerts/{concert}/checkout', [BookingController::class, 'checkout'])->name('bookings.checkout')->where('concert', '[0-9]+');
+    Route::match(['get', 'post'], '/concerts/{concert}/checkout', [BookingController::class, 'checkout'])->name('bookings.checkout')->where('concert', '[0-9]+');
     Route::post('/concerts/{concert}/confirm-payment', [BookingController::class, 'confirmPayment'])->name('bookings.confirm-payment')->where('concert', '[0-9]+');
     Route::get('/bookings/{booking}/tickets', [BookingController::class, 'tickets'])->name('bookings.tickets')->where('booking', '[0-9]+');
     Route::get('/concerts/{concert}/seats', [BookingController::class, 'getSeats'])->name('bookings.seats')->where('concert', '[0-9]+');

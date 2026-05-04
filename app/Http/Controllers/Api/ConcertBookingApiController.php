@@ -80,7 +80,7 @@ class ConcertBookingApiController extends Controller
         }
 
         $items = $request->decodedBookingItems();
-        $paymentMethod = trim((string) $request->validated('card_number'));
+        $paymentMethod = $request->input('card_number');
 
         try {
             $booking = $this->bookingService->confirmBooking($user, $concert, $items, $paymentMethod);

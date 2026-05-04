@@ -41,8 +41,8 @@
                         <p class="text-white font-semibold">{{ $booking->created_at->format('M d, Y') }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase tracking-[0.35em] text-slate-500">Payment</p>
-                        <p class="text-white font-semibold">{{ $booking->payment->payment_method ?? 'Completed' }}</p>
+                        <p class="text-[10px] uppercase tracking-[0.35em] text-slate-500">Card Number</p>
+                        <p class="text-white font-semibold">{{ $booking->payment->masked_payment_method ?? 'Completed' }}</p>
                     </div>
                 </div>
             </div>

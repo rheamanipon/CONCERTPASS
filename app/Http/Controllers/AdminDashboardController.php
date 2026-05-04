@@ -55,11 +55,16 @@ class AdminDashboardController extends Controller
             ->limit(12)
             ->get();
 
-        $channelRevenue = Payment::select('payment_method', DB::raw('SUM(amount) as total_amount'))
-            ->where('status', 'paid')
-            ->groupBy('payment_method')
-            ->orderByDesc('total_amount')
-            ->get();
+        $channelRevenue = Payment::where('status', 'paid')
+            ->get()
+            ->groupBy(fn (Payment $payment) => $payment->payment_method_label)
+            ->map(function ($payments, $label) {
+                return [
+                    'payment_method' => $label,
+                    'total_amount' => $payments->sum('amount'),
+                ];
+            })
+            ->values();
 
         return view('admin.analytics', compact('monthlyRevenue', 'monthlySalesCount', 'monthlyUsers', 'channelRevenue'));
     }

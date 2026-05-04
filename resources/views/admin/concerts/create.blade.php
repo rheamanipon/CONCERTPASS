@@ -52,11 +52,11 @@
                         </div>
                         <div class="ad-field">
                             <label class="ad-label" for="poster">Poster</label>
-                            <input class="ad-input" id="poster" type="file" name="poster" accept="image/*">
+                            <input class="ad-input" id="poster" type="file" name="poster" accept="image/*" required>
                         </div>
                         <div class="ad-field">
                             <label class="ad-label" for="seat_plan_image">Seat Plan Image</label>
-                            <input class="ad-input" id="seat_plan_image" type="file" name="seat_plan_image" accept="image/*">
+                            <input class="ad-input" id="seat_plan_image" type="file" name="seat_plan_image" accept="image/*" required>
                             <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem;">Upload venue seat plan image for customer reference</p>
                         </div>
                         <div class="ad-field ad-field-full">
@@ -163,6 +163,7 @@
                         </div>
                     </div>
                     <div style="display: flex; gap: 0.5rem; justify-content: flex-end; align-items: center;">
+                        <button type="button" class="ad-btn ad-btn-secondary" style="padding: 0.6rem 1rem;" onclick="editTicketType(${index})">Edit</button>
                         <button type="button" class="ad-btn ad-btn-secondary" style="padding: 0.6rem 1rem;" onclick="removeTicketType(${index})">Remove</button>
                     </div>
                     <input type="hidden" name="ticket_types[${index}][ticket_type_id]" value="${ticket.ticket_type_id}">
@@ -214,6 +215,18 @@
         }
 
         function removeTicketType(index) {
+            selectedTicketTypes.splice(index, 1);
+            renderTicketTypes();
+        }
+
+        // Edit ticket type function
+        function editTicketType(index) {
+            const ticket = selectedTicketTypes[index];
+            ticketTypeSelect.value = ticket.ticket_type_id;
+            ticketPriceInput.value = ticket.price;
+            ticketQuantityInput.value = ticket.quantity;
+            ticketColorInput.value = ticket.color;
+            // Remove the ticket from the list so it can be re-added/updated
             selectedTicketTypes.splice(index, 1);
             renderTicketTypes();
         }

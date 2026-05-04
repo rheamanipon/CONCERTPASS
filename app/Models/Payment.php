@@ -30,17 +30,35 @@ class Payment extends Model
         $digitsOnly = preg_replace('/\D+/', '', $value) ?? '';
 
         if ($digitsOnly === '') {
-            return str($value)->replace('_', ' ')->title()->value();
+            return $this->payment_method_label;
         }
 
-        $lastFour = substr($digitsOnly, -4);
-        $prefix = trim((string) preg_replace('/\d+/', '', $value));
-        $prefix = trim((string) preg_replace('/\*+/', '', $prefix));
+        $maskedDigits = str_repeat('*', max(0, strlen($digitsOnly) - 4)) . substr($digitsOnly, -4);
 
-        if ($prefix === '') {
-            return '****'.$lastFour;
+        return trim(chunk_split($maskedDigits, 4, ' '));
+    }
+
+    public function getPaymentMethodLabelAttribute(): string
+    {
+        $value = trim((string) $this->payment_method);
+        $digitsOnly = preg_replace('/\D+/', '', $value) ?? '';
+
+        if ($digitsOnly !== '') {
+            return 'Credit Card';
         }
 
-        return $prefix.' ****'.$lastFour;
+        return str($value)->replace('_', ' ')->title()->value();
+    }
+
+    public function getPaymentMethodFormattedAttribute(): string
+    {
+        $value = trim((string) $this->payment_method);
+        $digitsOnly = preg_replace('/\D+/', '', $value) ?? '';
+
+        if ($digitsOnly === '') {
+            return $this->payment_method_label;
+        }
+
+        return trim(chunk_split($digitsOnly, 4, ' '));
     }
 }

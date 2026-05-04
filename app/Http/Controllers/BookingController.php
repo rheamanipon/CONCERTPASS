@@ -135,7 +135,19 @@ class BookingController extends Controller
 
     public function checkout(CheckoutBookingRequest $request, Concert $concert)
     {
-        $cartItems = $request->decodedBookingItems();
+        $raw = $request->input('booking_items') ?? $request->session()->getOldInput('booking_items');
+        if (! is_string($raw) || $raw === '') {
+            return redirect()
+                ->route('bookings.review', $concert)
+                ->withErrors(['general' => 'Please review your tickets before checkout.']);
+        }
+
+        $cartItems = json_decode($raw, true);
+        if (! is_array($cartItems) || ! array_is_list($cartItems)) {
+            return redirect()
+                ->route('bookings.create', $concert)
+                ->withErrors(['general' => 'Invalid booking data.']);
+        }
 
         $cartTotals = $this->bookingService->calculateTotals($concert, $cartItems);
         $totalQuantity = $cartTotals['totalQuantity'];
@@ -152,7 +164,7 @@ class BookingController extends Controller
     {
         $cartItems = $request->decodedBookingItems();
 
-        $paymentMethod = trim((string) $request->validated('card_number'));
+        $paymentMethod = $request->input('card_number');
 
         try {
             $booking = $this->bookingService->confirmBooking(Auth::user(), $concert, $cartItems, $paymentMethod);

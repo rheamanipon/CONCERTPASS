@@ -34,15 +34,32 @@ class DashboardApiController extends Controller
             ->orderBy('month')
             ->get();
 
-        $channels = Payment::select('payment_method', DB::raw('SUM(amount) as revenue'))
-            ->where('status', 'paid')
-            ->groupBy('payment_method')
+        $channels = Payment::where('status', 'paid')
+            ->get()
+            ->groupBy(fn (Payment $payment) => $payment->payment_method_label)
+            ->map(function ($payments, $label) {
+                return [
+                    'payment_method' => $label,
+                    'revenue' => (float) $payments->sum('amount'),
+                ];
+            })
+            ->values();
+
+        // Revenue per concert
+        $concertRevenue = \App\Models\Concert::select('concerts.id', 'concerts.title', DB::raw('COALESCE(SUM(payments.amount),0) as revenue'))
+            ->leftJoin('bookings', 'concerts.id', '=', 'bookings.concert_id')
+            ->leftJoin('payments', function($join) {
+                $join->on('bookings.id', '=', 'payments.booking_id')
+                    ->where('payments.status', '=', 'paid');
+            })
+            ->groupBy('concerts.id', 'concerts.title')
             ->orderByDesc('revenue')
             ->get();
 
         return response()->json([
             'monthly' => $monthly,
             'channels' => $channels,
+            'concerts' => $concertRevenue,
         ]);
     }
 

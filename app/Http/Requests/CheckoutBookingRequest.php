@@ -22,24 +22,21 @@ class CheckoutBookingRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->isMethod('get')) {
+            return [];
+        }
+
         return [
             'booking_items' => ['required', 'string', 'json'],
         ];
     }
 
-    /**
-     * @return array<string, string>
-     */
-    public function messages(): array
-    {
-        return [
-            'booking_items.required' => 'Please select at least one ticket.',
-            'booking_items.json' => 'Invalid booking data.',
-        ];
-    }
-
     public function withValidator(Validator $validator): void
     {
+        if ($this->isMethod('get')) {
+            return;
+        }
+
         $validator->after(function (Validator $validator): void {
             $items = $this->decodedBookingItems();
             if ($items === [] && $this->filled('booking_items')) {
@@ -55,5 +52,16 @@ class CheckoutBookingRequest extends FormRequest
                 $validator->errors()->add('booking_items', $error);
             }
         });
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'booking_items.required' => 'Please select at least one ticket.',
+            'booking_items.json' => 'Invalid booking data.',
+        ];
     }
 }
