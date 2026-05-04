@@ -33,11 +33,6 @@ class ProfileController extends Controller
 
         $user->fill($request->validated());
 
-        // Reset email verification if email is changed
-        if ($oldEmail !== $user->email) {
-            $user->email_verified_at = null;
-        }
-
         $user->save();
 
         // Log profile update

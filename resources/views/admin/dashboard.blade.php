@@ -98,63 +98,138 @@
     </section>
 
     @include('admin.partials.theme-script')
-    <script src="/chartjs-loader.js"></script>
     <script>
-    function fetchAndRenderCharts() {
-        fetch('/api/admin/analytics')
-            .then(res => res.json())
-            .then(data => {
-                // Revenue per Concert (Bar Chart)
-                const concertLabels = data.concerts.map(c => c.title);
-                const concertData = data.concerts.map(c => c.revenue);
-                const ctx1 = document.getElementById('revenueConcertChart').getContext('2d');
-                if (window.revenueConcertChart) window.revenueConcertChart.destroy();
-                window.revenueConcertChart = new Chart(ctx1, {
-                    type: 'bar',
-                    data: {
-                        labels: concertLabels,
-                        datasets: [{
-                            label: 'Revenue',
-                            data: concertData,
-                            backgroundColor: '#ff6600',
-                            borderRadius: 8,
-                        }]
+    (function () {
+        let concertChartInstance = null;
+        let channelChartInstance = null;
+        let refreshTimer = null;
+
+        function normalizeLabel(value, fallback) {
+            if (typeof value !== 'string') {
+                return fallback;
+            }
+
+            const trimmed = value.trim();
+            return trimmed.length > 0 ? trimmed : fallback;
+        }
+
+        function mapDashboardData(payload) {
+            const concerts = Array.isArray(payload?.concerts) ? payload.concerts : [];
+            const channels = Array.isArray(payload?.channels) ? payload.channels : [];
+
+            return {
+                concertLabels: concerts.map((concert) => normalizeLabel(concert.concert_name ?? concert.title, 'Untitled Concert')),
+                concertValues: concerts.map((concert) => Number(concert.total_revenue ?? concert.revenue ?? 0)),
+                channelLabels: channels.map((channel) => normalizeLabel(channel.payment_method, 'Unknown')),
+                channelValues: channels.map((channel) => Number(channel.total_amount ?? channel.revenue ?? 0)),
+            };
+        }
+
+        function createOrReplaceChart(instance, canvasId, config) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                return instance;
+            }
+
+            const context = canvas.getContext('2d');
+            if (!context) {
+                return instance;
+            }
+
+            if (instance) {
+                instance.destroy();
+            }
+
+            return new window.Chart(context, config);
+        }
+
+        function renderCharts(mapped) {
+            concertChartInstance = createOrReplaceChart(concertChartInstance, 'revenueConcertChart', {
+                type: 'bar',
+                data: {
+                    labels: mapped.concertLabels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: mapped.concertValues,
+                        backgroundColor: '#ff6600',
+                        borderRadius: 8,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } },
+                },
+            });
+
+            channelChartInstance = createOrReplaceChart(channelChartInstance, 'revenueChannelChart', {
+                type: 'bar',
+                data: {
+                    labels: mapped.channelLabels,
+                    datasets: [{
+                        label: 'Revenue',
+                        data: mapped.channelValues,
+                        backgroundColor: '#444',
+                        borderRadius: 8,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } },
+                },
+            });
+        }
+
+        async function fetchAndRenderCharts() {
+            if (!window.Chart) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/analytics', {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
                     },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true } }
-                    }
                 });
 
-                // Revenue by Channel (Bar Chart)
-                const channelLabels = data.channels.map(c => c.payment_method || 'Unknown');
-                const channelData = data.channels.map(c => c.revenue);
-                const ctx2 = document.getElementById('revenueChannelChart').getContext('2d');
-                if (window.revenueChannelChart) window.revenueChannelChart.destroy();
-                window.revenueChannelChart = new Chart(ctx2, {
-                    type: 'bar',
-                    data: {
-                        labels: channelLabels,
-                        datasets: [{
-                            label: 'Revenue',
-                            data: channelData,
-                            backgroundColor: '#444',
-                            borderRadius: 8,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        plugins: { legend: { display: false } },
-                        scales: { y: { beginAtZero: true } }
-                    }
-                });
-            });
-    }
-    document.addEventListener('chartjs:loaded', fetchAndRenderCharts);
-    // Optional: auto-refresh every 30s for real-time effect
-    setInterval(() => { if (window.Chart) fetchAndRenderCharts(); }, 30000);
+                if (!response.ok) {
+                    throw new Error(`Analytics request failed with status ${response.status}`);
+                }
+
+                const payload = await response.json();
+                const mapped = mapDashboardData(payload);
+                renderCharts(mapped);
+            } catch (error) {
+                console.error('Dashboard chart render failed:', error);
+            }
+        }
+
+        function bootDashboardCharts(attempt = 0) {
+            const hasCanvases = document.getElementById('revenueConcertChart') && document.getElementById('revenueChannelChart');
+            if (!hasCanvases) {
+                return;
+            }
+
+            if (!window.Chart) {
+                if (attempt < 20) {
+                    setTimeout(() => bootDashboardCharts(attempt + 1), 150);
+                }
+                return;
+            }
+
+            fetchAndRenderCharts();
+
+            if (!refreshTimer) {
+                refreshTimer = window.setInterval(fetchAndRenderCharts, 30000);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => bootDashboardCharts(0));
+        window.addEventListener('load', () => bootDashboardCharts(0));
+    })();
     </script>
  </x-app-layout>

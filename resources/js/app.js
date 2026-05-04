@@ -142,4 +142,6 @@ function renderAnalyticsCharts() {
 
 Alpine.start();
 
-document.addEventListener('DOMContentLoaded', renderAnalyticsCharts);
+document.addEventListener('DOMContentLoaded', () => {
+    renderAnalyticsCharts();
+});

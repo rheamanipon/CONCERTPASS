@@ -133,9 +133,5 @@ function renderAnalyticsCharts() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (window.Alpine && !window.Alpine.initialized) {
-        window.Alpine.start();
-    }
-
     renderAnalyticsCharts();
 });

@@ -40,21 +40,33 @@ class DashboardApiController extends Controller
             ->map(function ($payments, $label) {
                 return [
                     'payment_method' => $label,
-                    'revenue' => (float) $payments->sum('amount'),
+                    'total_amount' => (float) $payments->sum('amount'),
                 ];
             })
             ->values();
 
         // Revenue per concert
-        $concertRevenue = \App\Models\Concert::select('concerts.id', 'concerts.title', DB::raw('COALESCE(SUM(payments.amount),0) as revenue'))
+        $concertRevenue = \App\Models\Concert::select(
+            'concerts.id',
+            'concerts.title',
+            DB::raw('COALESCE(SUM(payments.amount),0) as total_revenue')
+        )
             ->leftJoin('bookings', 'concerts.id', '=', 'bookings.concert_id')
             ->leftJoin('payments', function($join) {
                 $join->on('bookings.id', '=', 'payments.booking_id')
                     ->where('payments.status', '=', 'paid');
             })
             ->groupBy('concerts.id', 'concerts.title')
-            ->orderByDesc('revenue')
+            ->orderByDesc('total_revenue')
             ->get();
+
+        $concertRevenue = $concertRevenue->map(function ($concert) {
+            return [
+                'id' => (int) $concert->id,
+                'concert_name' => $concert->title,
+                'total_revenue' => (float) $concert->total_revenue,
+            ];
+        })->values();
 
         return response()->json([
             'monthly' => $monthly,
