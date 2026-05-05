@@ -68,13 +68,4 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     // Add more admin routes
 });
 
-Route::middleware(['auth', 'admin'])->prefix('api/admin')->name('api.admin.')->group(function () {
-    Route::get('/metrics', [DashboardApiController::class, 'metrics'])->name('metrics');
-    Route::get('/analytics', [DashboardApiController::class, 'analytics'])->name('analytics');
-    Route::get('/activity-logs', [DashboardApiController::class, 'activityLogs'])->name('activity-logs');
-    Route::apiResource('users', UserApiController::class);
-    Route::apiResource('concerts', ConcertApiController::class);
-    Route::apiResource('venues', VenueApiController::class);
-});
-
 require __DIR__.'/auth.php';
