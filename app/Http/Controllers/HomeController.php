@@ -4,11 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Models\Concert;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
 {
     public function index(Request $request)
     {
+        // Redirect admins to admin dashboard
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $query = Concert::with('venue')->where('date', '>=', now()->toDateString());
 
         if ($request->filled('location')) {
@@ -38,6 +44,11 @@ class HomeController extends Controller
 
     public function concerts(Request $request)
     {
+        // Redirect admins to admin dashboard
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $query = Concert::with('venue')->where('date', '>=', now()->toDateString());
 
         if ($request->filled('search')) {
@@ -73,6 +84,11 @@ class HomeController extends Controller
 
     public function show(Concert $concert)
     {
+        // Redirect admins to admin dashboard
+        if (Auth::check() && Auth::user()->isAdmin()) {
+            return redirect()->route('admin.dashboard');
+        }
+
         $concert->load(['venue', 'ticketPrices.ticketType']);
         $eventTicketTotal = $concert->totalTicketAllocation();
 
