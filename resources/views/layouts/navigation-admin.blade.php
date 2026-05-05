@@ -14,7 +14,7 @@
 
         <div class="admin-nav-user">
             <div class="admin-user-badge">
-                <span>{{ Auth::user()->name }}</span>
+                <span>{{ explode(' ', Auth::user()->name)[0] }}</span>
                 <span class="admin-role-badge">admin panel</span>
             </div>
             <form method="POST" action="{{ route('logout') }}" style="display: inline;">

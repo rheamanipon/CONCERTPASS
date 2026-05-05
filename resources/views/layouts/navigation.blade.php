@@ -19,7 +19,7 @@
         <div class="nav-user">
             @auth
                 <a href="{{ route('profile.edit') }}" class="user-badge user-badge-link">
-                    <span>{{ Auth::user()->name }}</span>
+                    <span>{{ explode(' ', Auth::user()->name)[0] }}</span>
                     <span class="role">{{ auth()->user()->role }}</span>
                 </a>
                 <form method="POST" action="{{ route('logout') }}" style="display: inline;">
