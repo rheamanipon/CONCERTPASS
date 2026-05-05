@@ -25,11 +25,13 @@
                         </div>
                         <div class="ad-field">
                             <label class="ad-label" for="venue_id">Venue</label>
-                            <select class="ad-select" id="venue_id" name="venue_id" required>
+                            <select class="ad-select" id="venue_id" name="venue_id" required disabled>
                                 @foreach($venues as $venue)
                                     <option value="{{ $venue->id }}" {{ old('venue_id', $concert->venue_id) == $venue->id ? 'selected' : '' }}>{{ $venue->name }}</option>
                                 @endforeach
                             </select>
+                            <input type="hidden" name="venue_id" value="{{ old('venue_id', $concert->venue_id) }}">
+                            <p style="font-size: 0.8rem; color: #94a3b8; margin-top: 0.25rem;">Venue cannot be changed.</p>
                         </div>
                         <div class="ad-field">
                             <label class="ad-label" for="date">Date</label>
@@ -59,7 +61,7 @@
                             </p>
                             @if($hasSoldTickets)
                                 <div style="margin-bottom: 0.75rem; padding: 0.6rem 0.8rem; border: 1px solid rgba(248,113,113,0.4); border-radius: 0.5rem; background: rgba(248,113,113,0.08); color: #fecaca;">
-                                    Ticket pricing and colors are locked because tickets have already been sold for this concert.
+                                    Ticket pricing and colors are locked because tickets have already been sold for this concert. Quantity can still be increased (but not below sold tickets).
                                 </div>
                             @endif
 
@@ -123,14 +125,13 @@
         })->values()->all();
 
         $existingTicketTypesJson = old('ticket_types', $concert->concertTicketTypes->map(function ($type) {
-            $soldCount = \App\Models\Ticket::where('concert_ticket_type_id', $type->id)->count();
             return [    
                 'id' => $type->id,
                 'ticket_type_id' => $type->ticket_type_id,
                 'price' => $type->price,
                 'quantity' => $type->quantity,
                 'color' => $type->color,
-                'sold' => $soldCount,
+                'sold' => $type->sold_quantity,
             ];
         })->values()->all());
     @endphp
@@ -163,7 +164,7 @@
                 row.innerHTML = `
                     <div>
                         <p style="margin: 0 0 0.2rem; font-weight: 700; font-size: 0.95rem;">${label}</p>
-                        <p style="margin: 0 0 0.5rem; font-size: 0.82rem; color: #94a3b8;">Sold: ${ticket.sold || 0} | Available: ${ticket.quantity - (ticket.sold || 0)}</p>
+                        <p style="margin: 0 0 0.5rem; font-size: 0.82rem; color: #94a3b8;">Sold: ${ticket.sold || 0} | Available: ${Math.max(0, ticket.quantity - (ticket.sold || 0))}</p>
                         <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.55rem; align-items: end;">
                             <div>
                                 <label class="ad-label" style="margin-bottom: 0.25rem; font-size: 0.75rem;">Price (PHP)</label>
@@ -171,7 +172,7 @@
                             </div>
                             <div>
                                 <label class="ad-label" style="margin-bottom: 0.25rem; font-size: 0.75rem;">Quantity</label>
-                                <input class="ad-input" type="number" min="${ticket.sold || 0}" value="${ticket.quantity}" ${hasSoldTickets ? 'disabled' : ''} data-action="quantity" data-index="${index}" style="padding: 0.5rem 0.7rem; min-height: 2.2rem; font-size: 0.9rem;">
+                                <input class="ad-input" type="number" min="${ticket.sold || 0}" value="${ticket.quantity}" data-action="quantity" data-index="${index}" style="padding: 0.5rem 0.7rem; min-height: 2.2rem; font-size: 0.9rem;">
                             </div>
                             <div>
                                 <label class="ad-label" style="margin-bottom: 0.25rem; font-size: 0.75rem;">Color</label>
@@ -207,12 +208,18 @@
                     const index = Number(event.currentTarget.dataset.index);
                     const nextQuantity = Number(event.currentTarget.value);
                     const minQuantity = selectedTicketTypes[index].sold || 0;
+                    
+                    // Always clear validity first
+                    event.currentTarget.setCustomValidity('');
+                    
                     if (Number.isFinite(nextQuantity) && nextQuantity >= minQuantity) {
                         selectedTicketTypes[index].quantity = nextQuantity;
                         const hiddenQuantity = rowQuery(index, 'quantity');
                         if (hiddenQuantity) {
                             hiddenQuantity.value = nextQuantity;
                         }
+                    } else if (Number.isFinite(nextQuantity) && nextQuantity < minQuantity) {
+                        event.currentTarget.setCustomValidity(`Quantity cannot be lower than sold tickets (${minQuantity}).`);
                     }
                 });
             });
@@ -227,6 +234,7 @@
                     }
                 });
             });
+
         }
 
         function rowQuery(index, field) {
@@ -235,6 +243,17 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             renderTicketTypes();
+            const form = document.querySelector('form[action*="concerts"]');
+            if (form) {
+                form.addEventListener('submit', (event) => {
+                    const invalidSold = selectedTicketTypes.find((row) => Number(row.quantity || 0) < Number(row.sold || 0));
+                    if (invalidSold) {
+                        event.preventDefault();
+                        alert(`A ticket type has quantity below sold tickets (${invalidSold.sold}).`);
+                        return;
+                    }
+                });
+            }
         });
     </script>
 </x-app-layout>

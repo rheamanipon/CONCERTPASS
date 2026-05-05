@@ -38,24 +38,24 @@
         <h2 class="text-2xl md:text-3xl font-bold text-center mb-12 text-white">Our Benefits</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div class="bg-gray-800 p-8 rounded-lg text-center border border-gray-700">
-                <div class="text-5xl mb-4">⚡</div>
-                <h3 class="text-xl font-bold mb-2 text-white">Instant Payment</h3>
-                <p class="text-gray-400 text-sm">We provide a safe & secure payment platform.</p>
+                <div class="text-5xl mb-4">💺</div>
+                <h3 class="text-xl font-bold mb-2 text-white">Interactive Seat Selection</h3>
+                <p class="text-gray-400 text-sm">Choose your preferred seats with real-time availability</p>
             </div>
             <div class="bg-gray-800 p-8 rounded-lg text-center border border-gray-700">
-                <div class="text-5xl mb-4">🛒</div>
-                <h3 class="text-xl font-bold mb-2 text-white">Online Booking</h3>
-                <p class="text-gray-400 text-sm">You can pay tickets directly from your home</p>
+                <div class="text-5xl mb-4">🔒</div>
+                <h3 class="text-xl font-bold mb-2 text-white">Secure Payment Processing</h3>
+                <p class="text-gray-400 text-sm">Credit card payments with encrypted transactions and instant confirmation</p>
             </div>
             <div class="bg-gray-800 p-8 rounded-lg text-center border border-gray-700">
-                <div class="text-5xl mb-4">♻️</div>
-                <h3 class="text-xl font-bold mb-2 text-white">Refundable Tickets</h3>
-                <p class="text-gray-400 text-sm">If any problem occurs, we refund your ticket.</p>
+                <div class="text-5xl mb-4">📱</div>
+                <h3 class="text-xl font-bold mb-2 text-white">Instant Ticket Delivery</h3>
+                <p class="text-gray-400 text-sm">Get your digital tickets immediately after payment confirmation</p>
             </div>
             <div class="bg-gray-800 p-8 rounded-lg text-center border border-gray-700">
-                <div class="text-5xl mb-4">💰</div>
-                <h3 class="text-xl font-bold mb-2 text-white">Cheapest Tickets</h3>
-                <p class="text-gray-400 text-sm">We offer the best prices you'll find anywhere else</p>
+                <div class="text-5xl mb-4">📊</div>
+                <h3 class="text-xl font-bold mb-2 text-white">Easy Booking Management</h3>
+                <p class="text-gray-400 text-sm">Track all your tickets, bookings, and payment history in one place</p>
             </div>
         </div>
     </section>
@@ -91,23 +91,23 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             <div class="bg-gray-800 p-8 rounded-lg border border-gray-700">
                 <div class="w-16 h-16 bg-orange-500 rounded-full mx-auto mb-6 flex items-center justify-center text-xl font-bold text-black">1</div>
-                <h3 class="text-lg font-bold mb-2 text-white">Choose a Concert</h3>
-                <p class="text-gray-400 text-sm">Select your favorite concert from our list</p>
+                <h3 class="text-lg font-bold mb-2 text-white">Browse & Select Concert</h3>
+                <p class="text-gray-400 text-sm">Find your favorite concerts by artist, venue, or date</p>
             </div>
             <div class="bg-gray-800 p-8 rounded-lg border border-gray-700">
                 <div class="w-16 h-16 bg-pink-600 rounded-full mx-auto mb-6 flex items-center justify-center text-xl font-bold text-black">2</div>
-                <h3 class="text-lg font-bold mb-2 text-white">Choose Date & Time</h3>
-                <p class="text-gray-400 text-sm">Pick the date and time that works best for you</p>
+                <h3 class="text-lg font-bold mb-2 text-white">Pick Your Seats</h3>
+                <p class="text-gray-400 text-sm">Choose your preferred seats from the interactive seat map</p>
             </div>
             <div class="bg-gray-800 p-8 rounded-lg border border-gray-700">
                 <div class="w-16 h-16 bg-cyan-400 rounded-full mx-auto mb-6 flex items-center justify-center text-xl font-bold text-black">3</div>
-                <h3 class="text-lg font-bold mb-2 text-white">Pay Your Bill</h3>
-                <p class="text-gray-400 text-sm">Complete the payment securely on our platform</p>
+                <h3 class="text-lg font-bold mb-2 text-white">Select & Pay</h3>
+                <p class="text-gray-400 text-sm">Choose ticket options and complete payment securely</p>
             </div>
             <div class="bg-gray-800 p-8 rounded-lg border border-gray-700">
                 <div class="w-16 h-16 bg-orange-500 rounded-full mx-auto mb-6 flex items-center justify-center text-xl font-bold text-black">4</div>
-                <h3 class="text-lg font-bold mb-2 text-white">Download Your Ticket</h3>
-                <p class="text-gray-400 text-sm">Get your ticket and enjoy the concert!</p>
+                <h3 class="text-lg font-bold mb-2 text-white">Get Your Ticket</h3>
+                <p class="text-gray-400 text-sm">Receive instant digital ticket for venue entry</p>
             </div>
         </div>
     </section>

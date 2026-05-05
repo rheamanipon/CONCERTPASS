@@ -15,8 +15,13 @@
                     <h3 class="ad-panel-title">Edit Venue Information</h3>
                     @if(!empty($isUsedByConcerts) && $isUsedByConcerts)
                         <div style="margin-bottom: 1rem; padding: 0.7rem 0.9rem; border: 1px solid rgba(251,191,36,0.45); border-radius: 0.5rem; background: rgba(251,191,36,0.08); color: #fde68a;">
-                            This venue is already used by concerts. Only capacity increase is allowed.
+                            This venue is already used by concerts. Capacity can be changed, but it cannot go below sold tickets for any existing concert.
                         </div>
+                        @if(!empty($concertSoldBreakdown) && $concertSoldBreakdown->isNotEmpty())
+                            <div style="margin-bottom: 1rem; padding: 0.7rem 0.9rem; border: 1px solid rgba(148,163,184,0.35); border-radius: 0.5rem; background: rgba(148,163,184,0.08); color: #cbd5e1;">
+                                Minimum allowed capacity based on sold tickets: <strong>{{ $maxSoldForConcert }}</strong>
+                            </div>
+                        @endif
                     @endif
                     <form method="POST" action="{{ route('admin.venues.update', $venue) }}" enctype="multipart/form-data" class="ad-form-grid-3">
                         @csrf @method('PUT')
@@ -30,7 +35,10 @@
                         </div>
                         <div class="ad-field">
                             <label class="ad-label" for="capacity">Capacity</label>
-                            <input class="ad-input" id="capacity" type="number" name="capacity" value="{{ old('capacity', $venue->capacity) }}" min="{{ !empty($isUsedByConcerts) && $isUsedByConcerts ? $venue->capacity : 1 }}" required>
+                            <input class="ad-input" id="capacity" type="number" name="capacity" value="{{ old('capacity', $venue->capacity) }}" min="{{ !empty($isUsedByConcerts) && $isUsedByConcerts ? $maxSoldForConcert : 1 }}" required>
+                            <p style="font-size: 0.8rem; color: #fbbf24; margin-top: 0.25rem;">
+                                Note: After increasing venue capacity, update the ticket quantities of affected concerts so the added seats become available for selling.
+                            </p>
                         </div>
 
                         <div class="ad-field ad-field-full">
@@ -45,4 +53,18 @@
         </div>
     </section>
     @include('admin.partials.theme-script')
+    <script>
+        const minAllowedCapacity = @json($maxSoldForConcert ?? 1);
+        const capacityInput = document.getElementById('capacity');
+        if (capacityInput) {
+            capacityInput.addEventListener('input', () => {
+                const value = Number(capacityInput.value || 0);
+                if (value < minAllowedCapacity) {
+                    capacityInput.setCustomValidity(`Capacity cannot be lower than sold tickets (${minAllowedCapacity}).`);
+                } else {
+                    capacityInput.setCustomValidity('');
+                }
+            });
+        }
+    </script>
 </x-app-layout>

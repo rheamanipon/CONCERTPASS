@@ -12,18 +12,21 @@ use Illuminate\Database\Seeder;
 
 class ConcertSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // Get venues
-        $manilaVenue = Venue::where('location', 'like', '%Manila%')->first();
-        $nyVenue = Venue::where('location', 'like', '%New York%')->first();
+        // Get ALL venues
+        $venues = Venue::all();
 
-        if (!$manilaVenue || !$nyVenue) {
-            return; // Skip if venues not found
+        if ($venues->count() < 2) {
+            return;
         }
+
+        // Helper para hindi pare-pareho
+        $v1 = $venues[0]->id;
+        $v2 = $venues[1]->id;
+        $v3 = $venues[2]->id ?? $venues[0]->id;
+        $v4 = $venues[3]->id ?? $venues[1]->id;
+        $v5 = $venues[4]->id ?? $venues[0]->id;
 
         // Create ticket types if not exist
         $ticketTypesData = [
@@ -36,15 +39,14 @@ class ConcertSeeder extends Seeder
             ['name' => 'GEN AD', 'description' => 'General Admission'],
         ];
 
-        $ticketTypeIds = [];
         foreach ($ticketTypesData as $data) {
-            $ticketType = TicketType::firstOrCreate(
+            TicketType::firstOrCreate(
                 ['name' => $data['name']],
                 ['description' => $data['description']]
             );
-            $ticketTypeIds[] = $ticketType->id;
         }
 
+        // SAME concerts, iba lang venue
         $concerts = [
             [
                 'title' => 'Born Pink World Tour Manila',
@@ -52,7 +54,7 @@ class ConcertSeeder extends Seeder
                 'artist' => 'BLACKPINK',
                 'date' => '2026-12-01',
                 'time' => '19:00:00',
-                'venue_id' => $manilaVenue->id,
+                'venue_id' => $v1,
                 'ticket_types' => ['VIP Standing', 'UBB', 'LBB', 'GEN AD'],
                 'prices' => [15000.00, 6500.00, 8000.00, 800.00],
                 'colors' => ['#FFD700', '#1E90FF', '#32CD32', '#F4A460'],
@@ -63,7 +65,7 @@ class ConcertSeeder extends Seeder
                 'artist' => 'BTS',
                 'date' => '2026-12-08',
                 'time' => '19:00:00',
-                'venue_id' => $manilaVenue->id,
+                'venue_id' => $v2,
                 'ticket_types' => ['VIP Standing', 'VIP Seated', 'LBA', 'UBA', 'GEN AD'],
                 'prices' => [18000.00, 12000.00, 6000.00, 4500.00, 1000.00],
                 'colors' => ['#FFD700', '#FF6347', '#A020F0', '#00CED1', '#F4A460'],
@@ -74,7 +76,7 @@ class ConcertSeeder extends Seeder
                 'artist' => 'BINI',
                 'date' => '2026-12-15',
                 'time' => '20:00:00',
-                'venue_id' => $manilaVenue->id,
+                'venue_id' => $v3,
                 'ticket_types' => ['VIP Standing', 'UBB', 'LBB', 'GEN AD'],
                 'prices' => [12000.00, 5500.00, 7000.00, 600.00],
                 'colors' => ['#FFD700', '#1E90FF', '#32CD32', '#F4A460'],
@@ -85,7 +87,7 @@ class ConcertSeeder extends Seeder
                 'artist' => 'SB19',
                 'date' => '2026-12-22',
                 'time' => '19:00:00',
-                'venue_id' => $manilaVenue->id,
+                'venue_id' => $v4,
                 'ticket_types' => ['VIP Standing', 'VIP Seated', 'LBA', 'UBA', 'GEN AD'],
                 'prices' => [16000.00, 11000.00, 5500.00, 4000.00, 900.00],
                 'colors' => ['#FFD700', '#FF6347', '#A020F0', '#00CED1', '#F4A460'],
@@ -96,7 +98,7 @@ class ConcertSeeder extends Seeder
                 'artist' => 'SEVENTEEN',
                 'date' => '2027-01-05',
                 'time' => '19:00:00',
-                'venue_id' => $manilaVenue->id,
+                'venue_id' => $v5,
                 'ticket_types' => ['VIP Standing', 'UBB', 'LBB', 'GEN AD'],
                 'prices' => [17000.00, 7000.00, 8500.00, 900.00],
                 'colors' => ['#FFD700', '#1E90FF', '#32CD32', '#F4A460'],
@@ -104,7 +106,6 @@ class ConcertSeeder extends Seeder
         ];
 
         foreach ($concerts as $concertData) {
-            // Update existing concert fields and ensure ticket pricing is refreshed.
             $concert = Concert::updateOrCreate(
                 ['title' => $concertData['title'], 'date' => $concertData['date']],
                 [
@@ -118,44 +119,33 @@ class ConcertSeeder extends Seeder
 
             ConcertTicketType::where('concert_id', $concert->id)->delete();
 
-            $ticketTypes = $concertData['ticket_types'];
-            $prices = $concertData['prices'];
-            $colors = $concertData['colors'];
-            $quantities = $concertData['quantities'] ?? [];
             $venue = Venue::find($concertData['venue_id']);
-            if (!$venue || $venue->capacity <= 0) {
-                continue;
-            }
+            if (!$venue || $venue->capacity <= 0) continue;
 
-            $venueCapacity = $venue->capacity;
-            $typeCount = count($ticketTypes);
-            if ($typeCount === 0) {
-                continue;
-            }
+            $typeCount = count($concertData['ticket_types']);
+            $baseQuantity = intdiv($venue->capacity, $typeCount);
+            $remainder = $venue->capacity % $typeCount;
 
-            $baseQuantity = intdiv($venueCapacity, $typeCount);
-            $remainder = $venueCapacity % $typeCount;
+            foreach ($concertData['ticket_types'] as $i => $typeName) {
+                $ticketType = TicketType::where('name', $typeName)->first();
 
-            foreach ($ticketTypes as $index => $ticketTypeName) {
-                $ticketType = TicketType::where('name', $ticketTypeName)->first();
                 if ($ticketType) {
-                    $quantity = isset($quantities[$index])
-                        ? $quantities[$index]
-                        : $baseQuantity + ($index < $remainder ? 1 : 0);
+                    $quantity = $baseQuantity + ($i < $remainder ? 1 : 0);
 
                     ConcertTicketType::create([
                         'concert_id' => $concert->id,
                         'ticket_type_id' => $ticketType->id,
-                        'price' => $prices[$index],
-                        'color' => $colors[$index],
+                        'price' => $concertData['prices'][$i],
+                        'color' => $concertData['colors'][$i],
                         'quantity' => $quantity,
                     ]);
                 }
             }
 
             $concert->load('concertTicketTypes.ticketType');
-            app(VenueSeatPoolService::class)->syncPhysicalSeatsForVenueTicketTypes($venue, $concert->concertTicketTypes);
+
+            app(VenueSeatPoolService::class)
+                ->syncPhysicalSeatsForVenueTicketTypes($venue, $concert->concertTicketTypes);
         }
     }
 }
-

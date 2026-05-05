@@ -57,28 +57,14 @@ class ConcertSeatAvailabilityService
         };
     }
 
-    /**
-     * Remaining purchasable tickets for this concert ticket option (matches admin "remaining"
-     * for quantity-based types; seat-picker types use eligible seat pool minus sold).
-     */
     public function remainingForTicketType(Concert $concert, ConcertTicketType $concertTicketType): int
     {
-        $slug = $concertTicketType->ticketType->name ?? '';
         $sold = Ticket::where('concert_ticket_type_id', $concertTicketType->id)->count();
-
-        if (in_array($slug, self::SEAT_PICKER_SLUGS, true)) {
-            $eligibleIds = $this->eligibleSeatIds($concert, $concertTicketType);
-            $capacity = count($eligibleIds);
-
-            return max(0, $capacity - $sold);
-        }
 
         return max(0, (int) $concertTicketType->quantity - $sold);
     }
 
-    /**
-     * All seeded seats in a section, ordered deterministically for limit-N selection.
-     */
+
     public function seatsInSectionOrdered(int $venueId, string $section): Builder
     {
         return Seat::query()

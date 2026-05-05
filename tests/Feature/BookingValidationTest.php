@@ -160,6 +160,22 @@ class BookingValidationTest extends TestCase
             ->assertSessionHasErrors('card_number');
     }
 
+    public function test_confirm_payment_rejects_card_number_with_letters_mixed_in_digits(): void
+    {
+        [, $concert, $ctt] = $this->createConcertWithGenAdOnly();
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->post(route('bookings.confirm-payment', $concert), array_merge($this->genAdBookingItemsField($ctt), [
+                'card_number' => '4111a11111111111',
+                'expiry' => '12/30',
+                'cvv' => '123',
+                'cardholder_name' => 'Juan Cruz',
+                'terms' => '1',
+            ]))
+            ->assertSessionHasErrors('card_number');
+    }
+
     public function test_confirm_payment_rejects_card_with_too_few_digits(): void
     {
         [, $concert, $ctt] = $this->createConcertWithGenAdOnly();

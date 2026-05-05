@@ -21,6 +21,11 @@ class ConcertTicketType extends Model
         'price' => 'decimal:2',
     ];
 
+    protected $appends = [
+        'sold_quantity',
+        'available_quantity',
+    ];
+
     public function concert()
     {
         return $this->belongsTo(Concert::class);
@@ -34,5 +39,22 @@ class ConcertTicketType extends Model
     public function getSectionAttribute()
     {
         return $this->custom_name ?: ($this->ticketType?->name ?? 'Unknown');
+    }
+
+    public function tickets()
+    {
+        return $this->hasMany(Ticket::class, 'concert_ticket_type_id');
+    }
+
+    public function getSoldQuantityAttribute(): int
+    {
+        // Always derive sold tickets from persisted ticket rows to avoid
+        // stale/foreign select aliases overriding inventory values.
+        return (int) $this->tickets()->count();
+    }
+
+    public function getAvailableQuantityAttribute(): int
+    {
+        return max(0, (int) $this->quantity - $this->sold_quantity);
     }
 }

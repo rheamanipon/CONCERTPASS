@@ -161,7 +161,7 @@ class AdminValidationTest extends TestCase
             ]);
     }
 
-    public function test_concert_store_rejects_when_ticket_total_not_equal_venue_capacity(): void
+    public function test_concert_store_rejects_when_ticket_total_exceeds_venue_capacity(): void
     {
         $admin = $this->actingAdmin();
         $venue = $this->createVenue(10);
@@ -170,7 +170,7 @@ class AdminValidationTest extends TestCase
         $this->actingAs($admin)
             ->from(route('admin.concerts.create'))
             ->post(route('admin.concerts.store'), [
-                'title' => 'Mismatch',
+                'title' => 'Exceeds Capacity',
                 'artist' => 'Band',
                 'venue_id' => $venue->id,
                 'date' => now()->addMonth()->toDateString(),
@@ -179,12 +179,39 @@ class AdminValidationTest extends TestCase
                     [
                         'ticket_type_id' => $tt->id,
                         'price' => 100,
-                        'quantity' => 9,
+                        'quantity' => 11,
                         'color' => '#FF0000',
                     ],
                 ],
             ])
             ->assertSessionHasErrors('ticket_types');
+    }
+
+    public function test_concert_store_accepts_when_ticket_total_less_than_venue_capacity(): void
+    {
+        $admin = $this->actingAdmin();
+        $venue = $this->createVenue(10);
+        $tt = $this->ensureTicketType();
+
+        $this->actingAs($admin)
+            ->from(route('admin.concerts.create'))
+            ->post(route('admin.concerts.store'), [
+                'title' => 'Less Than Capacity',
+                'artist' => 'Band',
+                'venue_id' => $venue->id,
+                'date' => now()->addMonth()->toDateString(),
+                'time' => '20:00',
+                'ticket_types' => [
+                    [
+                        'ticket_type_id' => $tt->id,
+                        'price' => 100,
+                        'quantity' => 8,
+                        'color' => '#FF0000',
+                    ],
+                ],
+            ])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect(route('admin.concerts.index'));
     }
 
     public function test_concert_store_accepts_valid_payload(): void

@@ -134,7 +134,6 @@
         const ticketColorInput = document.getElementById('ticket_color_input');
         const addTicketTypeBtn = document.getElementById('add_ticket_type_btn');
         const ticketTypesList = document.getElementById('ticket_types_list');
-        const venueSelect = document.getElementById('venue_id');
 
         let selectedTicketTypes = existingTicketTypes.map((ticket) => ({
             ticket_type_id: ticket.ticket_type_id,

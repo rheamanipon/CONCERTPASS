@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\TicketType;
 use App\Models\Venue;
 use App\Services\ConcertSeatAvailabilityService;
+use App\Services\TicketInventoryService;
 use App\Services\VenueSeatPoolService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,7 @@ class ConcertController extends Controller
     public function __construct(
         private readonly VenueSeatPoolService $venueSeatPool,
         private readonly ConcertSeatAvailabilityService $seatAvailability,
+        private readonly TicketInventoryService $ticketInventory,
     ) {
     }
 
@@ -84,23 +86,22 @@ class ConcertController extends Controller
             'ticket_types.*.color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
         ]);
 
-        $venue = Venue::find($request->venue_id);
-        $totalQuantity = collect($request->ticket_types)->sum('quantity');
-        if ($venue && $totalQuantity !== $venue->capacity) {
-            return back()
-                ->withInput()
-                ->withErrors(['ticket_types' => sprintf('The sum of ticket quantities must equal the selected venue capacity (%d). Current total: %d.', $venue->capacity, $totalQuantity)]);
-        }
-
         $data = $request->only(['title', 'description', 'artist', 'venue_id', 'date', 'time']);
 
         if ($request->hasFile('poster')) {
             $data['poster_url'] = $request->file('poster')->store('posters', 'public');
         }
 
-        $venue = Venue::find($request->venue_id);
-
         $data['seat_plan_image'] = $request->hasFile('seat_plan_image') ? $request->file('seat_plan_image')->store('seat-plans', 'public') : null;
+
+        $venue = Venue::findOrFail((int) $request->venue_id);
+        $capacityError = $this->ticketInventory->validateTotalAgainstVenueCapacity($request->ticket_types, $venue);
+        if ($capacityError !== null) {
+            return back()
+                ->withInput()
+                ->withErrors(['ticket_types' => $capacityError]);
+        }
+
         $concert = Concert::create($data);
         ActivityLog::record([
             'user_id' => auth()->id(),
@@ -193,7 +194,11 @@ class ConcertController extends Controller
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:20000',
             'artist' => 'required|string|max:255',
-            'venue_id' => 'required|exists:venues,id',
+            'venue_id' => ['required', 'exists:venues,id', function ($attribute, $value, $fail) use ($concert) {
+                if ($value != $concert->venue_id) {
+                    $fail('Venue cannot be changed after concert creation.');
+                }
+            }],
             'date' => 'required|date',
             'time' => 'required|date_format:H:i',
             'poster' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
@@ -207,14 +212,6 @@ class ConcertController extends Controller
             'ticket_types.*.color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
         ]);
 
-        $venue = Venue::find($request->venue_id);
-        $totalQuantity = collect($request->ticket_types)->sum('quantity');
-        if ($venue && $totalQuantity !== $venue->capacity) {
-            return back()
-                ->withInput()
-                ->withErrors(['ticket_types' => sprintf('The sum of ticket quantities must equal the selected venue capacity (%d). Current total: %d.', $venue->capacity, $totalQuantity)]);
-        }
-
         $existingTypes = $concert->concertTicketTypes()->get()->keyBy('id');
 
         $data = $request->only(['title', 'description', 'artist', 'venue_id', 'date', 'time']);
@@ -225,6 +222,14 @@ class ConcertController extends Controller
         
         if ($request->hasFile('seat_plan_image')) {
             $data['seat_plan_image'] = $request->file('seat_plan_image')->store('seat-plans', 'public');
+        }
+
+        $venue = Venue::findOrFail((int) $request->venue_id);
+        $capacityError = $this->ticketInventory->validateTotalAgainstVenueCapacity($request->ticket_types, $venue);
+        if ($capacityError !== null) {
+            return back()
+                ->withInput()
+                ->withErrors(['ticket_types' => $capacityError]);
         }
 
         $oldVenueId = $concert->venue_id;
@@ -240,7 +245,7 @@ class ConcertController extends Controller
         foreach ($request->ticket_types as $ticketData) {
             if (!empty($ticketData['id']) && $existingTypes->has($ticketData['id'])) {
                 $concertTicketType = $existingTypes->get($ticketData['id']);
-                $soldCount = Ticket::where('concert_ticket_type_id', $concertTicketType->id)->count();
+                $soldCount = $this->ticketInventory->soldQuantityForType($concertTicketType);
 
                 if ($ticketData['quantity'] < $soldCount) {
                     return back()

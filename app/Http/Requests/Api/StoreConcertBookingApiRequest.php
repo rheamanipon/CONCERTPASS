@@ -21,7 +21,7 @@ class StoreConcertBookingApiRequest extends ApiFormRequest
     protected function prepareForValidation(): void
     {
         $cardRaw = (string) $this->input('card_number', '');
-        $cardDigits = preg_replace('/\D+/', '', $cardRaw) ?? '';
+        $cardDigits = preg_replace('/[\s-]+/', '', $cardRaw) ?? '';
 
         $cvvRaw = (string) $this->input('cvv', '');
         $cvvDigits = preg_replace('/\D+/', '', $cvvRaw) ?? '';

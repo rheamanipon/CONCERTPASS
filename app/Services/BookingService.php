@@ -25,6 +25,7 @@ class BookingService
     public function __construct(
         private readonly ConcertSeatAvailabilityService $seatAvailability,
         private readonly BookingValidationService $bookingValidation,
+        private readonly TicketInventoryService $ticketInventory,
     ) {
     }
 
@@ -49,6 +50,33 @@ class BookingService
 
         return DB::transaction(function () use ($user, $concert, $seatItems, $autoAssignItems, $totalPrice, $priceRecords, $ticketTypes, $paymentMethod) {
             $totalQuantity = count($seatItems) + array_sum(array_column($autoAssignItems, 'quantity'));
+            $demandByType = [];
+            foreach ($seatItems as $item) {
+                $typeId = (int) $item['concert_ticket_type_id'];
+                $demandByType[$typeId] = ($demandByType[$typeId] ?? 0) + 1;
+            }
+            foreach ($autoAssignItems as $item) {
+                $typeId = (int) $item['concert_ticket_type_id'];
+                $demandByType[$typeId] = ($demandByType[$typeId] ?? 0) + (int) $item['quantity'];
+            }
+
+            $lockedTypes = ConcertTicketType::query()
+                ->whereIn('id', array_keys($demandByType))
+                ->lockForUpdate()
+                ->get()
+                ->keyBy('id');
+
+            foreach ($demandByType as $typeId => $demand) {
+                $concertTicketType = $lockedTypes->get($typeId);
+                if (! $concertTicketType || (int) $concertTicketType->concert_id !== (int) $concert->id) {
+                    throw new RuntimeException('Invalid ticket option for this event.');
+                }
+
+                $remaining = $this->ticketInventory->availableQuantityForType($concertTicketType);
+                if ((int) $demand > $remaining) {
+                    throw new RuntimeException('Not enough tickets remain for one of your selected types.');
+                }
+            }
 
             $sortedSeatIds = collect($seatItems)
                 ->pluck('seat_id')

@@ -59,7 +59,7 @@
                             <div style="display: flex; flex-direction: column; gap: 1rem;">
                                 <div>
                                     <label for="card_number" style="display: block; font-weight: 700; margin-bottom: 0.5rem; color: var(--text-primary);">Card Number</label>
-                                    <input type="text" id="card_number" name="card_number" placeholder="1234 5678 9012 3456" style="width: 100%; padding: 0.75rem 1rem; border: 1px solid rgba(0,0,0,0.12); border-radius: 0.25rem; font-size: 0.95rem;" value="{{ old('card_number') }}" required>
+                                    <input type="text" name="card_number" placeholder="1234 5678 9012 3456" inputmode="numeric" autocomplete="cc-number" maxlength="23" required oninput="let r=this.value.replace(/\D/g,'').slice(0,19);this.value=r.replace(/(\d{4})(?=\d)/g,'$1 ');this.dataset.raw=r;this.setCustomValidity('');" oninvalid="this.setCustomValidity('Please enter a valid card number (13–19 digits).')" onblur="this.value=this.value.replace(/\s+/g,'')" style="width:100%;padding:0.75rem 1rem;border:1px solid rgba(0,0,0,0.12);border-radius:0.25rem;font-size:0.95rem;" value="{{ old('card_number') }}">
                                     @error('card_number')
                                         <p style="margin-top: 0.5rem; color: #f87171; font-size: 0.9rem;">{{ $message }}</p>
                                     @enderror

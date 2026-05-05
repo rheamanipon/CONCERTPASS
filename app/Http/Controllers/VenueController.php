@@ -62,7 +62,21 @@ class VenueController extends Controller
     public function edit(Venue $venue)
     {
         $isUsedByConcerts = $venue->concerts()->exists();
-        return view('admin.venues.edit', compact('venue', 'isUsedByConcerts'));
+        $concertSoldBreakdown = $venue->concerts()
+            ->withCount([
+                'bookings as sold_tickets_count' => function ($query) {
+                    $query->join('tickets', 'tickets.booking_id', '=', 'bookings.id');
+                },
+            ])
+            ->get(['id', 'title'])
+            ->map(fn ($concert) => [
+                'title' => $concert->title,
+                'sold' => (int) $concert->sold_tickets_count,
+            ]);
+
+        $maxSoldForConcert = (int) ($concertSoldBreakdown->max('sold') ?? 0);
+
+        return view('admin.venues.edit', compact('venue', 'isUsedByConcerts', 'maxSoldForConcert', 'concertSoldBreakdown'));
     }
 
     public function update(Request $request, Venue $venue)
@@ -93,11 +107,6 @@ class VenueController extends Controller
                     ->withErrors(['name' => 'Venue name/location cannot be edited once the venue is already used by concerts. Only capacity increase is allowed.']);
             }
 
-            if ((int) $newCapacity < (int) $oldCapacity) {
-                return back()
-                    ->withInput()
-                    ->withErrors(['capacity' => 'Venue capacity cannot be decreased once the venue is already used by concerts.']);
-            }
         }
 
         $concerts = $venue->concerts()->with('concertTicketTypes.ticketType')->get();
@@ -119,8 +128,9 @@ class VenueController extends Controller
 
         $venue->update($data);
 
-        // If capacity changed or the venue has no seats yet, rebuild venue seat templates.
-        if ($newCapacity != $oldCapacity || $venue->seats()->count() === 0) {
+        // For venues already used by concerts, keep existing seat rows stable so
+        // seat-linked availability and sold-seat references do not shift unexpectedly.
+        if (! $isUsedByConcerts && ($newCapacity != $oldCapacity || $venue->seats()->count() === 0)) {
             $this->createVenueSeats($venue, $newCapacity);
         }
 
