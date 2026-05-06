@@ -189,7 +189,7 @@
             }
 
             try {
-                const response = await fetch('/api/admin/analytics', {
+                const response = await fetch('/admin/api/analytics', {
                     headers: {
                         'Accept': 'application/json',
                         'X-Requested-With': 'XMLHttpRequest',

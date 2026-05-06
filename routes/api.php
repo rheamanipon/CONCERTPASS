@@ -17,9 +17,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
 
     // Admin API routes
     Route::middleware(['api_admin'])->prefix('admin')->name('api.admin.')->group(function () {
-        Route::get('/metrics', [DashboardApiController::class, 'metrics'])->name('metrics');
-        Route::get('/analytics', [DashboardApiController::class, 'analytics'])->name('analytics');
-        Route::get('/activity-logs', [DashboardApiController::class, 'activityLogs'])->name('activity-logs');
         Route::apiResource('users', UserApiController::class);
         Route::apiResource('concerts', ConcertApiController::class);
         Route::apiResource('venues', VenueApiController::class);

@@ -66,6 +66,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('venues', VenueController::class);
     Route::resource('users', AdminUserController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     // Add more admin routes
+
+    // API endpoints for dashboard charts (accessible via session auth)
+    Route::prefix('api')->group(function () {
+        Route::get('/metrics', [DashboardApiController::class, 'metrics'])->name('api.metrics');
+        Route::get('/analytics', [DashboardApiController::class, 'analytics'])->name('api.analytics');
+        Route::get('/activity-logs', [DashboardApiController::class, 'activityLogs'])->name('api.activity-logs');
+    });
 });
 
 require __DIR__.'/auth.php';
