@@ -818,10 +818,14 @@ select option {
 }
 
 .form-error {
-    color: #ff6666;
+    color: #ef4444 !important;
     font-size: 0.875rem;
     margin-top: 0.5rem;
     font-weight: 600;
+}
+
+.form-error li {
+    color: #ef4444 !important;
 }
 
 /* ========== LAYOUT ========== */
@@ -1459,12 +1463,17 @@ tbody td:first-child {
 }
 
 .form-error {
-    color: #ff6666;
+    color: #ef4444 !important;
     font-size: 0.75rem;
     margin-top: 0.5rem;
     font-weight: 600;
-    text-transform: uppercase;
+    text-transform: none;
     letter-spacing: 0.05em;
+}
+
+.form-error li {
+    color: #ef4444 !important;
+    text-transform: none;
 }
 
 .form-actions {
@@ -1652,4 +1661,62 @@ input.pr-12 {
 
 ::-webkit-scrollbar-corner {
     background: var(--bg-primary);
+}
+
+/* ========== AUTH BUTTONS (ALWAYS VISIBLE) ========== */
+.neon-btn {
+    width: 100%;
+    border: 1px solid rgba(255, 136, 44, 0.7);
+    background: linear-gradient(180deg, #0e1220 0%, #090b14 100%);
+    color: #fff7ed;
+    box-shadow:
+        0 0 0 1px rgba(255, 136, 44, 0.2) inset,
+        0 0 22px rgba(255, 102, 0, 0.3);
+    text-shadow: 0 0 6px rgba(255, 196, 143, 0.25);
+}
+
+.neon-btn:hover {
+    border-color: rgba(255, 168, 91, 0.95);
+    background: linear-gradient(180deg, #1a1620 0%, #120e14 100%);
+    color: #fffaf5;
+    box-shadow:
+        0 0 0 1px rgba(255, 168, 91, 0.32) inset,
+        0 0 30px rgba(255, 102, 0, 0.46);
+    transform: translateY(-1px);
+}
+
+.neon-btn:focus-visible {
+    outline: none;
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.15),
+        0 0 0 4px rgba(255, 136, 44, 0.45),
+        0 0 30px rgba(255, 102, 0, 0.5);
+}
+
+.neon-btn:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.neon-btn:disabled:hover {
+    transform: none;
+}
+
+.neon-pulse {
+    animation: neonPulse 2.4s ease-in-out infinite;
+}
+
+@keyframes neonPulse {
+    0%,
+    100% {
+        box-shadow:
+            0 0 0 1px rgba(255, 136, 44, 0.2) inset,
+            0 0 20px rgba(255, 102, 0, 0.3);
+    }
+    50% {
+        box-shadow:
+            0 0 0 1px rgba(255, 168, 91, 0.34) inset,
+            0 0 30px rgba(255, 136, 44, 0.44);
+    }
 }

@@ -23,7 +23,7 @@
                             </div>
                         @endif
                     @endif
-                    <form method="POST" action="{{ route('admin.venues.update', $venue) }}" enctype="multipart/form-data" class="ad-form-grid-3">
+                    <form method="POST" action="{{ route('admin.venues.update', $venue) }}" enctype="multipart/form-data" class="ad-form-grid-3" id="adminVenueEditForm">
                         @csrf @method('PUT')
                         <div class="ad-field">
                             <label class="ad-label" for="name">Venue Name</label>
@@ -43,7 +43,7 @@
 
                         <div class="ad-field ad-field-full">
                             <div class="ad-actions-row">
-                                <button class="ad-btn ad-btn-primary" type="submit">Update Venue</button>
+                                <button class="ad-btn ad-btn-primary" type="submit" id="adminVenueUpdateBtn" disabled>Update Venue</button>
                             </div>
                         </div>
 
@@ -65,6 +65,37 @@
                     capacityInput.setCustomValidity('');
                 }
             });
+        }
+
+        const venueForm = document.getElementById('adminVenueEditForm');
+        const venueSubmitButton = document.getElementById('adminVenueUpdateBtn');
+        if (venueForm && venueSubmitButton) {
+            const trackedFields = Array.from(venueForm.elements).filter((field) => {
+                return field.name && !field.disabled && field.type !== 'hidden';
+            });
+            const initialValues = new Map(
+                trackedFields.map((field) => [
+                    field.name,
+                    field.type === 'file' ? '' : field.value,
+                ])
+            );
+
+            const evaluateDirty = () => {
+                const hasChanges = trackedFields.some((field) => {
+                    if (field.type === 'file') {
+                        return field.files && field.files.length > 0;
+                    }
+                    return field.value !== initialValues.get(field.name);
+                });
+                venueSubmitButton.disabled = !hasChanges;
+            };
+
+            trackedFields.forEach((field) => {
+                field.addEventListener('input', evaluateDirty);
+                field.addEventListener('change', evaluateDirty);
+            });
+
+            evaluateDirty();
         }
     </script>
 </x-app-layout>

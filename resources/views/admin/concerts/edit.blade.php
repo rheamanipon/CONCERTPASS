@@ -13,7 +13,7 @@
                 </header>
                 <section class="ad-card">
                     <h3 class="ad-panel-title">Edit Concert Information</h3>
-                    <form method="POST" action="{{ route('admin.concerts.update', $concert) }}" enctype="multipart/form-data" class="ad-form-grid-2">
+                    <form method="POST" action="{{ route('admin.concerts.update', $concert) }}" enctype="multipart/form-data" class="ad-form-grid-2" id="adminConcertEditForm">
                         @csrf @method('PUT')
                         <div class="ad-field">
                             <label class="ad-label" for="title">Title</label>
@@ -105,7 +105,7 @@
                         @endif
                         <div class="ad-field ad-field-full">
                             <div class="ad-actions-row">
-                                <button class="ad-btn ad-btn-primary" type="submit">Update Concert</button>
+                                <button class="ad-btn ad-btn-primary" type="submit" id="adminConcertUpdateBtn" disabled>Update Concert</button>
                             </div>
                         </div>
                     </form>
@@ -243,8 +243,39 @@
 
         document.addEventListener('DOMContentLoaded', () => {
             renderTicketTypes();
-            const form = document.querySelector('form[action*="concerts"]');
+            const form = document.getElementById('adminConcertEditForm');
             if (form) {
+                const submitButton = document.getElementById('adminConcertUpdateBtn');
+                const trackedFields = Array.from(form.elements).filter((field) => {
+                    return field.name && !field.disabled && field.type !== 'hidden';
+                });
+                const initialValues = new Map(
+                    trackedFields.map((field) => [
+                        field.name,
+                        field.type === 'file' ? '' : field.value,
+                    ])
+                );
+
+                const evaluateDirty = () => {
+                    const hasChanges = trackedFields.some((field) => {
+                        if (field.type === 'file') {
+                            return field.files && field.files.length > 0;
+                        }
+                        return field.value !== initialValues.get(field.name);
+                    });
+
+                    if (submitButton) {
+                        submitButton.disabled = !hasChanges;
+                    }
+                };
+
+                trackedFields.forEach((field) => {
+                    field.addEventListener('input', evaluateDirty);
+                    field.addEventListener('change', evaluateDirty);
+                });
+
+                evaluateDirty();
+
                 form.addEventListener('submit', (event) => {
                     const invalidSold = selectedTicketTypes.find((row) => Number(row.quantity || 0) < Number(row.sold || 0));
                     if (invalidSold) {

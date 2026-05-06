@@ -18,8 +18,14 @@
         <li><a href="{{ route('admin.activity-logs') }}" class="{{ request()->routeIs('admin.activity-logs') ? 'is-active' : '' }}">Activity Logs</a></li>
     </ul>
 
-    <form method="POST" action="{{ route('logout') }}" class="admin-sidebar-logout">
-        @csrf
-        <button type="submit" class="ad-btn ad-btn-logout-action">Logout</button>
-    </form>
+    <div class="admin-sidebar-actions">
+        <a href="{{ route('admin.profile.show') }}" class="ad-btn ad-btn-profile-action {{ request()->routeIs('admin.profile.*') ? 'is-active' : '' }}">
+            Admin Profile
+        </a>
+
+        <form method="POST" action="{{ route('logout') }}" class="admin-sidebar-logout">
+            @csrf
+            <button type="submit" class="ad-btn ad-btn-logout-action">Logout</button>
+        </form>
+    </div>
 </aside>

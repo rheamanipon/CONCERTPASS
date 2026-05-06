@@ -13,6 +13,7 @@ use App\Services\TicketInventoryService;
 use App\Services\VenueSeatPoolService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class ConcertController extends Controller
 {
@@ -72,7 +73,7 @@ class ConcertController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => ['required', 'string', 'max:255', Rule::unique('concerts', 'title')],
             'description' => 'nullable|string|max:20000',
             'artist' => 'required|string|max:255',
             'venue_id' => 'required|exists:venues,id',
@@ -84,6 +85,8 @@ class ConcertController extends Controller
             'ticket_types.*.price' => 'required|numeric|min:0',
             'ticket_types.*.quantity' => 'required|integer|min:1',
             'ticket_types.*.color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
+        ], [
+            'title.unique' => 'This concert already exists.',
         ]);
 
         $data = $request->only(['title', 'description', 'artist', 'venue_id', 'date', 'time']);
@@ -191,7 +194,7 @@ class ConcertController extends Controller
         })->exists();
 
         $request->validate([
-            'title' => 'required|string|max:255',
+            'title' => ['required', 'string', 'max:255', Rule::unique('concerts', 'title')->ignore($concert->id)],
             'description' => 'nullable|string|max:20000',
             'artist' => 'required|string|max:255',
             'venue_id' => ['required', 'exists:venues,id', function ($attribute, $value, $fail) use ($concert) {
@@ -210,6 +213,8 @@ class ConcertController extends Controller
             'ticket_types.*.price' => 'required|numeric|min:0',
             'ticket_types.*.quantity' => 'required|integer|min:1',
             'ticket_types.*.color' => 'required|string|regex:/^#[a-fA-F0-9]{6}$/',
+        ], [
+            'title.unique' => 'This concert already exists.',
         ]);
 
         $existingTypes = $concert->concertTicketTypes()->get()->keyBy('id');

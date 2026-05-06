@@ -17,7 +17,7 @@
 
                 <section class="ad-card">
                     <h3 class="ad-panel-title">Edit User #{{ $user->id }}</h3>
-                    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="ad-form-grid-3">
+                    <form method="POST" action="{{ route('admin.users.update', $user) }}" class="ad-form-grid-3" id="adminUserEditForm">
                         @csrf
                         @method('PUT')
 
@@ -47,7 +47,7 @@
                         <div class="ad-field ad-field-full">
                             <div class="ad-actions-row">
                                 <a href="{{ route('admin.users.index') }}" class="ad-btn">Cancel</a>
-                                <button type="submit" class="ad-btn ad-btn-primary">Update User</button>
+                                <button type="submit" class="ad-btn ad-btn-primary" id="adminUserUpdateBtn" disabled>Update User</button>
                             </div>
                         </div>
                     </form>
@@ -57,4 +57,40 @@
     </section>
 
     @include('admin.partials.theme-script')
+    <script>
+        (function () {
+            const editForm = document.getElementById('adminUserEditForm');
+            const submitButton = document.getElementById('adminUserUpdateBtn');
+            if (!editForm || !submitButton) {
+                return;
+            }
+
+            const trackedFields = Array.from(editForm.elements).filter((field) => {
+                return field.name && !field.disabled && field.type !== 'hidden';
+            });
+            const initialValues = new Map(
+                trackedFields.map((field) => [
+                    field.name,
+                    field.type === 'file' ? '' : field.value,
+                ])
+            );
+
+            const evaluateDirty = () => {
+                const hasChanges = trackedFields.some((field) => {
+                    if (field.type === 'file') {
+                        return field.files && field.files.length > 0;
+                    }
+                    return field.value !== initialValues.get(field.name);
+                });
+                submitButton.disabled = !hasChanges;
+            };
+
+            trackedFields.forEach((field) => {
+                field.addEventListener('input', evaluateDirty);
+                field.addEventListener('change', evaluateDirty);
+            });
+
+            evaluateDirty();
+        })();
+    </script>
 </x-app-layout>
