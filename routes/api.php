@@ -16,7 +16,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
 
     // Admin API routes
-    Route::middleware(['api_admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['api_admin'])->prefix('admin')->name('api.admin.')->group(function () {
         Route::get('/metrics', [DashboardApiController::class, 'metrics'])->name('metrics');
         Route::get('/analytics', [DashboardApiController::class, 'analytics'])->name('analytics');
         Route::get('/activity-logs', [DashboardApiController::class, 'activityLogs'])->name('activity-logs');
